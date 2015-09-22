@@ -1,17 +1,24 @@
 -- Configure UART to 115200 8N1
 uart.setup(0, 115200, 8, 0, 1, 1)
 
--- Initialize I2C bus with SDA on GPIO0, SCL on GPIO2
+require('config')
+require('pca9685')
+
+
+-- Initialize I2C bus with SDA and SCL from config 
 -- https://github.com/nodemcu/nodemcu-firmware/wiki/nodemcu_api_en#new_gpio_map
-i2c.setup(0, 3, 4, i2c.SLOW)
+i2c.setup(i2c_id, i2c_sda, i2c_scl, i2c.SLOW)
 
 -- Initialize PCA9685 PWM controller
 -- Args:
 --	i2c bus id (should be 0)
 --	i2c address (see pca9685 datasheet)
 --	mode - 16-bit value, low byte is MODE1, high is MODE2 (see datasheet)
-require('pca9685')
-pca9685.init(0, 0x40, 0)
+--
+-- TODO: maybe use auto incrementing control register?
+for i = 1,getn(pca9685_addr) do
+  pca9685.init(i2c_id, pwm_ctrl_addr[i], 0)
+end
 
 -- PWM channels used for R, G, B colors. 
 pwm_channels={0, 1, 2}
