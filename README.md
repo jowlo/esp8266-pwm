@@ -1,4 +1,12 @@
 # **esp8266-pwm** #
+# Everything below is the the original repository's README by [lexszero](https://github.com/lexszero/). It will be kept here until I get around rewriting parts of it.
+The main goal of this fork is to support multiple PCA9685s on one I2C-line as well as not using MQTT but (if the ESP8266 can handle it) WebSockets for use by a client
+
+All changes to the code and effectively this repository as a whole is under (GPL)[https://www.gnu.org/licenses/gpl.txt], whereas lexszeros original code is under WTFPL license (see below).
+If i understand the licensing laws correctly, it is allowed to incorporate code released to the Public Domain in... tl;dr. If you disagree, please tell me.)
+
+
+# Original Readme
 
 ## Summary
 Code for ESP8266 WiFi module with [NodeMcu firmware](https://github.com/nodemcu/nodemcu-firmware) to control PCA9685 PWM controller. You can easily build WiFi-controlled smart home equipment or toys with this. Also contains a demo application: RGB LED strip with WiFi.
