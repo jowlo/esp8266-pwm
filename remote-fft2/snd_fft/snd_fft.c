@@ -14,10 +14,13 @@
 #include <asoundlib.h>
 #include <sndfile.h>
 
-//#include <complex.h>
 #include <fftw3.h>
 
+//#include "udpsend.h"
+
 #define POWER_RANGES 10 
+
+
 
 struct holder {
 	SNDFILE *infile;
@@ -39,6 +42,7 @@ struct holder {
 	double *windowed_samples;
 
   double *power_spectrum;
+  double *logx;
 
 	double max;
 };
@@ -70,6 +74,11 @@ static void prepare_fftw(struct holder *holder)
 //  for (int i = 0; i < holder->fftout_count; i++) {
 //		holder->output[i] = 0;
 //  }
+
+	// calculate a blackman window if not already done
+  holder->blackman_window = (double*)malloc(holder->samples_count * sizeof(double));
+   for(int i = 0; i < holder->samples_count; i++)
+       holder->blackman_window[i] = 0.53836 - 0.46164*cos( 2*M_PI * i / ( holder->samples_count-1) );
 
 	holder->plan = fftw_plan_dft_r2c_1d(holder->samples_count, holder->windowed_samples, holder->output, 0);
 	if (!holder->plan)
@@ -104,13 +113,6 @@ static void compute_fftw(struct holder *holder)
 
 	//printf("\n ==== Calculating blackman window over samples ==== \n");
 
-	// calculate a blackman window if not already done
-  if(holder->blackman_window == NULL) {
-    holder->blackman_window = (double*)malloc(holder->samples_count * sizeof(double));
-     for(int i = 0; i < holder->samples_count; i++)
-         holder->blackman_window[i] = 0.53836 - 0.46164*cos( 2*M_PI * i / ( holder->samples_count-1) );
-  }
-
   // apply window
   for(int i = 0; i < holder->samples_count; ++i){
     holder->windowed_samples[i] = holder->samples[i] * holder->blackman_window[i];
@@ -140,24 +142,53 @@ static void show_graph(struct holder *holder)
   // allocate power spectrum
   if(holder->power_spectrum == NULL)
     holder->power_spectrum = (double *)malloc(holder->fftout_count * sizeof(double));
+    holder->logx = (double *)malloc(holder->fftout_count * sizeof(double));
 
   // fill power spectrum
-  for(int i = 0; i < holder->fftout_count; i++)
-    holder->power_spectrum[i] = (holder->output[i][0] * holder->output[i][0]) + (holder->output[i][1] * holder->output[i][1]);// / holder->samples_count;
+  for(int i = 0; i < holder->fftout_count; i++) {
+    holder->power_spectrum[i] = (holder->output[i][0] * holder->output[i][0]) + (holder->output[i][1] * holder->output[i][1]) / holder->samples_count;
+    if(holder->power_spectrum[i] < 0) holder->power_spectrum[i] = - holder->power_spectrum[i];
+  }
+
+  // log10 on x axis
+//  for(int i = 1; i < holder->fftout_count; i++) {
+//    holder->power_spectrum[i] = log10(holder->power_spectrum[i]);
+//  }
+
+  // log10 on y axis
+  // this is - no joke - taken from xkcd forums
+  // i do not know how it works, neither does the poster remember
+  //
+  // n = N/2
+  // float logx[n] - output array after applying "vertical" log to power[i]
+//  double logn=log((double)holder->fftout_count);
+//  for(int i=0; i<holder->fftout_count-1; i++) {
+//     double exponent=(i*logn)/holder->fftout_count;
+//  
+//     double idx=exp(exponent)-1;
+//           
+//     int k=(int)idx;
+//     double alfa=idx-k;
+//  
+//     holder->logx[i]=(1-alfa)*holder->power_spectrum[k]+alfa*holder->power_spectrum[k+1];
+//  }
+//  holder->logx[holder->fftout_count-1]=holder->power_spectrum[holder->fftout_count-1];
+
 
   double sum = 0;
-  int j = holder->fftout_count/POWER_RANGES;
+  int j = 2 ;//holder->fftout_count/POWER_RANGES;
   for(int i = 1; i < holder->fftout_count; i++) {
-    // logscale
-    holder->power_spectrum[i] = log10(holder->power_spectrum[i]);
-    //print it
-    //if(i%10 == 0) printf("\n");
-    //printf("p@%3d: %f\t", i, holder->power_spectrum[i]);
     sum += holder->power_spectrum[i];
 
     if(i%j == 0){
-      printf("pr@%2d: %.3f\t", i/j, sum);
+      //values
+      //printf("%7d: %.7f\t", j, sum);
+      //
+      //improvised bars
+      printf("%3d%.*s%.*s", j, ((int)(sum)), "================", 16-((int)(sum)<16?((int)sum):16), "                ");
+
       sum = 0;
+      j = j*2;
     }
 
   }
@@ -165,17 +196,17 @@ static void show_graph(struct holder *holder)
 
 }
 
-//static void write_snd(struct holder *holder, float const *samples,
-//		unsigned int count)
-//{
-//	snd_pcm_sframes_t frames;
-//
-//	frames = snd_pcm_writei(holder->alsa_handle, samples, count);
-//	if (frames < 0)
-//		frames = snd_pcm_recover(holder->alsa_handle, frames, 0);
-//	if (frames < 0)
-//		errx(2, "snd_pcm_writei failed: %s", snd_strerror(frames));
-//}
+static void write_snd(struct holder *holder, float const *samples,
+		unsigned int count)
+{
+	snd_pcm_sframes_t frames;
+
+	frames = snd_pcm_writei(holder->alsa_handle, samples, count);
+	if (frames < 0)
+		frames = snd_pcm_recover(holder->alsa_handle, frames, 0);
+	if (frames < 0)
+		errx(2, "snd_pcm_writei failed: %s", snd_strerror(frames));
+}
 
 void decode(struct holder *holder)
 {
@@ -212,7 +243,7 @@ void decode(struct holder *holder)
 			//usleep(10000);
 		}
 
-		//write_snd(holder, buf, count);
+		write_snd(holder, buf, count);
 	} while (!short_read);
 }
 
@@ -230,16 +261,16 @@ void open_io(struct holder *holder, const char *filename)
 		errx(1, "open in: %s", sf_strerror(NULL));
 
 
-//	err = snd_pcm_open(&holder->alsa_handle, "default",
-//			SND_PCM_STREAM_PLAYBACK, 0);
-//	if (err < 0)
-//		errx(1, "alsa open: %s", snd_strerror(err));
-//
-//	err = snd_pcm_set_params(holder->alsa_handle, SND_PCM_FORMAT_FLOAT,
-//			SND_PCM_ACCESS_RW_INTERLEAVED, holder->ininfo.channels,
-//			holder->ininfo.samplerate, 1, 500000);
-//	if (err < 0)
-//		errx(1, "alsa set_params: %s", snd_strerror(err));
+	err = snd_pcm_open(&holder->alsa_handle, "default",
+			SND_PCM_STREAM_PLAYBACK, 0);
+	if (err < 0)
+		errx(1, "alsa open: %s", snd_strerror(err));
+
+	err = snd_pcm_set_params(holder->alsa_handle, SND_PCM_FORMAT_FLOAT,
+			SND_PCM_ACCESS_RW_INTERLEAVED, holder->ininfo.channels,
+			holder->ininfo.samplerate, 1, 500000);
+	if (err < 0)
+		errx(1, "alsa set_params: %s", snd_strerror(err));
 
 }
 
