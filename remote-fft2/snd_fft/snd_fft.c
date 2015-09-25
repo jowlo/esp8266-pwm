@@ -16,7 +16,7 @@
 
 #include <fftw3.h>
 
-//#include "udpsend.h"
+#include "udpsend.h"
 
 #define POWER_RANGES 10 
 
@@ -175,9 +175,15 @@ static void show_graph(struct holder *holder)
 //  holder->logx[holder->fftout_count-1]=holder->power_spectrum[holder->fftout_count-1];
 
 
+
   double sum = 0;
+
+  char send[1000];
+  memset(&send[0], 0, sizeof(send));
+
   int j = 2 ;//holder->fftout_count/POWER_RANGES;
   for(int i = 1; i < holder->fftout_count; i++) {
+
     sum += holder->power_spectrum[i];
 
     if(i%j == 0){
@@ -185,14 +191,22 @@ static void show_graph(struct holder *holder)
       //printf("%7d: %.7f\t", j, sum);
       //
       //improvised bars
-      printf("%3d%.*s%.*s", j, ((int)(sum)), "================", 16-((int)(sum)<16?((int)sum):16), "                ");
+      //printf("%3d%.*s%.*s", j, ((int)(sum)), "================", 16-((int)(sum)<16?((int)sum):16), "                ");
 
+      char buf[1024];
+      sprintf(buf, "%d:%f ", j, sum);
+      strcat(send, buf);
+      //printf("%s", send);
       sum = 0;
       j = j*2;
     }
 
   }
   printf("\n");
+  //printf("%s",send);
+  strcat(send, "\n");
+  int ret = udp_send(sizeof(send), send);
+  //printf("net return = %d", ret);
 
 }
 
@@ -297,6 +311,8 @@ int main(int argc, char **argv)
 
 	printf("samples_count: %d\n", holder.samples_count);
 	printf("fftout_count: %d\n", holder.fftout_count);
+
+	udp_setup("192.168.178.20", "8000");
 
 
 	/* do we have enough data? no = clamp the graph 
