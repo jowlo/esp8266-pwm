@@ -192,7 +192,7 @@ static void show_graph(struct holder *holder)
       //printf("%7d: %.7f\t", j, sum);
       //
       //improvised bars
-      printf("%3d%.*s%.*s", i/j, ((int)(sum)), "================", 16-((int)(sum)<16?((int)sum):16), "                ");
+      //printf("%3d%.*s%.*s", i/j, ((int)(sum)), "================", 16-((int)(sum)<16?((int)sum):16), "                ");
 
       //char buf[10];
       //sprintf(buf, "%d:%f ", j, sum);
@@ -204,7 +204,7 @@ static void show_graph(struct holder *holder)
     }
 
   }
-  printf("\n");
+  //printf("\n");
   //printf("%s",send);
   //strcat(send, "\n");
   if(net){
