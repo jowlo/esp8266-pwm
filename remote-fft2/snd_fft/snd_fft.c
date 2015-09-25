@@ -20,7 +20,8 @@
 
 #define POWER_RANGES 10 
 
-
+//do we send data out?
+bool net;
 
 struct holder {
 	SNDFILE *infile;
@@ -178,10 +179,10 @@ static void show_graph(struct holder *holder)
 
   double sum = 0;
 
-  char send[1000];
+  char send[10];
   memset(&send[0], 0, sizeof(send));
 
-  int j = 2 ;//holder->fftout_count/POWER_RANGES;
+  int j = holder->fftout_count/POWER_RANGES;
   for(int i = 1; i < holder->fftout_count; i++) {
 
     sum += holder->power_spectrum[i];
@@ -191,21 +192,24 @@ static void show_graph(struct holder *holder)
       //printf("%7d: %.7f\t", j, sum);
       //
       //improvised bars
-      //printf("%3d%.*s%.*s", j, ((int)(sum)), "================", 16-((int)(sum)<16?((int)sum):16), "                ");
+      printf("%3d%.*s%.*s", i/j, ((int)(sum)), "================", 16-((int)(sum)<16?((int)sum):16), "                ");
 
-      char buf[1024];
-      sprintf(buf, "%d:%f ", j, sum);
-      strcat(send, buf);
+      //char buf[10];
+      //sprintf(buf, "%d:%f ", j, sum);
+      //strcat(send, buf);
       //printf("%s", send);
+      send[i/j-1] = sum;
       sum = 0;
-      j = j*2;
+      //j = j*2;
     }
 
   }
   printf("\n");
   //printf("%s",send);
-  strcat(send, "\n");
-  int ret = udp_send(sizeof(send), send);
+  //strcat(send, "\n");
+  if(net){
+    int ret = udp_send(sizeof(send), send);
+  }
   //printf("net return = %d", ret);
 
 }
@@ -312,7 +316,10 @@ int main(int argc, char **argv)
 	printf("samples_count: %d\n", holder.samples_count);
 	printf("fftout_count: %d\n", holder.fftout_count);
 
-	udp_setup("192.168.178.20", "8000");
+  if(argc >3){
+	  udp_setup(argv[2], argv[3]);
+	  net = true;
+  }
 
 
 	/* do we have enough data? no = clamp the graph 

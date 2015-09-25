@@ -12,7 +12,7 @@ function rgb(r, g, b)
 end
 
 
-function rgba(r, g, b, br)
+function rgbbr(r, g, b, br)
 	pca9685.set_chan_byte(pwm_channels[1]-(br-255), r)
 	pca9685.set_chan_byte(pwm_channels[2]-(br-255), g)
 	pca9685.set_chan_byte(pwm_channels[3]-(br-255), b)
@@ -25,7 +25,7 @@ function rgb1(val)
 end
 
 
-function rgbbr(val)
+function rgbbr_one(val)
 	rgbbr(
 	  bit.band(bit.rshift(val, 24), 0xFF),
 	  bit.band(bit.rshift(val, 16), 0xFF),

@@ -13,9 +13,6 @@ int fd;
 
 int udp_setup(char* hostname, char* portname) {
   
-  hostname=0; /* localhost */
-  portname="8000";
-  
   memset(&hints,0,sizeof(hints));
   
   hints.ai_family=AF_INET;
@@ -46,7 +43,7 @@ int udp_send(size_t size, char* data) {
   if (err==-1) {
       printf("%s",strerror(errno));
   }
-  printf("sending... %s", data);
+  //printf("sending... %s", data);
   return err;
 
 }
