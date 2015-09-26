@@ -22,6 +22,8 @@
 
 //do we send data out?
 bool net;
+//console bars?
+bool showbars = false;
 
 struct holder {
 	SNDFILE *infile;
@@ -141,9 +143,10 @@ static void compute_fftw(struct holder *holder)
 static void show_graph(struct holder *holder)
 {
   // allocate power spectrum
-  if(holder->power_spectrum == NULL)
+  if(holder->power_spectrum == NULL) {
     holder->power_spectrum = (double *)malloc(holder->fftout_count * sizeof(double));
     holder->logx = (double *)malloc(holder->fftout_count * sizeof(double));
+  }
 
   // fill power spectrum
   for(int i = 0; i < holder->fftout_count; i++) {
@@ -179,8 +182,9 @@ static void show_graph(struct holder *holder)
 
   double sum = 0;
 
-  char send[10];
+  char send[2+ POWER_RANGES*2];
   memset(&send[0], 0, sizeof(send));
+  send[1] = 0x7e; // pwm command
 
   int j = holder->fftout_count/POWER_RANGES;
   for(int i = 1; i < holder->fftout_count; i++) {
@@ -192,19 +196,22 @@ static void show_graph(struct holder *holder)
       //printf("%7d: %.7f\t", j, sum);
       //
       //improvised bars
-      //printf("%3d%.*s%.*s", i/j, ((int)(sum)), "================", 16-((int)(sum)<16?((int)sum):16), "                ");
+      if(showbars){
+      printf("%3d%.*s%.*s", i/j, ((int)(sum)), "================", 16-((int)(sum)<16?((int)sum):16), "                ");
+      }
 
       //char buf[10];
       //sprintf(buf, "%d:%f ", j, sum);
       //strcat(send, buf);
       //printf("%s", send);
-      send[i/j-1] = sum;
+      send[2+ (i/j-1)*2] = ((int)sum >> 8) & 0xff;
+      send[2+ (i/j-1)*2+1] = (int)sum & 0xff ;
       sum = 0;
       //j = j*2;
     }
 
   }
-  //printf("\n");
+  if(showbars) printf("\n");
   //printf("%s",send);
   //strcat(send, "\n");
   if(net){
@@ -320,7 +327,8 @@ int main(int argc, char **argv)
 	  udp_setup(argv[2], argv[3]);
 	  net = true;
   }
-
+  if(argc >4 && strcmp(argv[4], "-v") == 0) showbars = true;
+    
 
 	/* do we have enough data? no = clamp the graph 
 	if (holder.width > holder.samples_count / 2)
