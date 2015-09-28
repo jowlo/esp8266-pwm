@@ -5,8 +5,8 @@
 #include <ESP8266WiFiMulti.h>
 #include <WiFiUdp.h>
 
-#include "config.h"
 
+#include "config.h"
 /*
  * 31 mar 2015
  * This sketch display UDP packets coming from an UDP client.
@@ -16,10 +16,13 @@
  *
  */
 
+// Command flags
 #define PWM_CMD  126 // 0x7e
 #define SET_CMD  127 // 0x7f
-  #define SET_CMD_GLOW    1
+  #define SET_CMD_MIN    15 // 0x0f
+  #define SET_CMD_MAX    16 // 0x10
   #define SET_CMD_REDUCE  2   
+
 
 
 
@@ -29,8 +32,6 @@ inline int min ( int a, int b ) { return a > b ? b : a; }
 
  
 int status = WL_IDLE_STATUS;
-const char* ssid = WIFI_SSID;  //  your network SSID (name)
-const char* pass = WIFI_PASS;       // your network password
 
 unsigned int localPort = 5555;      // local port to listen for UDP packets
 
@@ -61,14 +62,14 @@ void setup()
   WiFi.begin(ssid, pass);
   
   // Wait for connect to AP
-  Serial.print("[Connecting]");
+  Serial.print("[Connecting] ");
   Serial.print(ssid);
   int tries=0;
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
     tries++;
-    if (tries > 30){
+    if (tries > 100){
       break;
     }
   }
@@ -165,7 +166,18 @@ void parse_set(byte* buf, int start, int total){
         Serial.print("set reduce to ");
         Serial.println(reduce);
         break;
+      case(SET_CMD_MAX):
+        pwm_max = (read2b(buf, start+1));
+        Serial.print("set pwm_max to ");
+        Serial.println(pwm_max);
+        break;
+      case(SET_CMD_MIN):
+        pwm_max = (read2b(buf, start+1));
+        Serial.print("set pwm_min to ");
+        Serial.println(pwm_min);
+        break;        
       default:
+        Serial.print("set cmd fields n/a");
         break;
     }
     start += 3;
