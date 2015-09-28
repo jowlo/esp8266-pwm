@@ -18,10 +18,14 @@
 
 // Command flags
 #define PWM_CMD  126 // 0x7e
+
 #define SET_CMD  127 // 0x7f
   #define SET_CMD_MIN    15 // 0x0f
   #define SET_CMD_MAX    16 // 0x10
-  #define SET_CMD_REDUCE  2   
+  #define SET_CMD_REDUCE  2 // 0x02
+  #define SET_CMD_CUTOFF  3 // 0x03    
+  #define SET_CMD_1CH     4 // 0x04 (set to 0 disable, counting channels from 1
+  #define SET_CMD_BIN     5 // 0x04 (set to 0 disable, counting channels from 1
 
 
 
@@ -45,8 +49,13 @@ int pin_values[pinouts] = {0,0,0,0,0,0,0,0};
 int pwm_max = 1023;
 int pwm_min = 0;
 
-bool glow = false;
 int reduce = 1023;
+
+int cutoff = 0;
+
+int single_channel = 0;
+
+int binary_mode = 0;
 
 WiFiUDP Udp;
 
@@ -149,8 +158,15 @@ int read2b(byte *buf, int start) {
 
 void parse_pwm(byte* buf, int start, int total){
   for(byte i = 0; i < pinouts; i++){
-    pin_values[i] = max( pin_values[i]-reduce, min(pwm_max, max(pwm_min, read2b(buf, start+(2*i))))); // val has to be bigger than pwm_min, smaller than max, and bigger than (currentvalue -reduce)
-    analogWrite(pins[i], pin_values[i]);
+    if(single_channel) {
+      pin_values[i] = max( pin_values[i]-reduce, min(pwm_max, max(pwm_min, read2b(buf, start+(2*(single_channel-1))))));
+    } else {
+      pin_values[i] = max( pin_values[i]-reduce, min(pwm_max, max(pwm_min, read2b(buf, start+(2*i))))); // val has to be bigger than pwm_min, smaller than max, and bigger than (currentvalue -reduce)
+    }
+    if(binary_mode) {
+      pin_values[i] = pin_values[i] > cutoff ? pwm_max : 0;
+    }
+    analogWrite(pins[i], (pin_values[i] < cutoff)? 0 : pin_values[i]);
   }
 }
 /* settings cmd
@@ -172,10 +188,25 @@ void parse_set(byte* buf, int start, int total){
         Serial.println(pwm_max);
         break;
       case(SET_CMD_MIN):
-        pwm_max = (read2b(buf, start+1));
+        pwm_min = (read2b(buf, start+1));
         Serial.print("set pwm_min to ");
         Serial.println(pwm_min);
-        break;        
+        break;     
+      case(SET_CMD_CUTOFF):
+        cutoff = (read2b(buf, start+1));
+        Serial.print("set cutoff to ");
+        Serial.println(cutoff);
+        break;   
+      case(SET_CMD_1CH):
+        single_channel = (read2b(buf, start+1));
+        Serial.print("set single channel to ");
+        Serial.println(single_channel);
+        break;   
+      case(SET_CMD_BIN):
+        binary_mode = (read2b(buf, start+1));
+        Serial.print("set binary mode to ");
+        Serial.println(binary_mode);
+        break;           
       default:
         Serial.print("set cmd fields n/a");
         break;
