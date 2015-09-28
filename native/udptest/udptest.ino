@@ -5,6 +5,8 @@
 #include <ESP8266WiFiMulti.h>
 #include <WiFiUdp.h>
 
+#include "config.h"
+
 /*
  * 31 mar 2015
  * This sketch display UDP packets coming from an UDP client.
@@ -27,8 +29,8 @@ inline int min ( int a, int b ) { return a > b ? b : a; }
 
  
 int status = WL_IDLE_STATUS;
-const char* ssid = "jw";  //  your network SSID (name)
-const char* pass = "CB5YFQudWdXqQrlTtufy9kFrsAHfzjlNnwJp1uh";       // your network password
+const char* ssid = WIFI_SSID;  //  your network SSID (name)
+const char* pass = WIFI_PASS;       // your network password
 
 unsigned int localPort = 5555;      // local port to listen for UDP packets
 
