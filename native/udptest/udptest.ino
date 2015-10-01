@@ -41,10 +41,11 @@ unsigned int localPort = 5555;      // local port to listen for UDP packets
 
 byte buf[512]; //buffer to hold incoming and outgoing packets
 
-const byte pinouts = 8;
-byte pins[pinouts] = { 15, 2, 0, 4, 5, 12, 14, 16 };
+const byte pinouts = 3;
+// red, green, blue
+byte pins[pinouts] = {  4, 12, 14, };
 
-int pin_values[pinouts] = {0,0,0,0,0,0,0,0};
+int pin_values[pinouts] = {0,0,0};
 
 int pwm_max = 1023;
 int pwm_min = 0;
