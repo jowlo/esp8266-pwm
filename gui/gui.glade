@@ -142,7 +142,6 @@
                 <property name="can_focus">True</property>
                 <property name="halign">center</property>
                 <property name="active">True</property>
-                <property name="state">True</property>
                 <signal name="state-set" handler="btn_autosend" swapped="no"/>
               </object>
               <packing>

@@ -1,9 +1,12 @@
+#include <Wire.h>
+
 #include <WiFiClientSecure.h>
 #include <ESP8266WiFi.h>
 #include <WiFiServer.h>
 #include <WiFiClient.h>
 #include <ESP8266WiFiMulti.h>
 #include <WiFiUdp.h>
+#include <Wire.h>
 
 
 #include "config.h"
@@ -43,7 +46,7 @@ byte buf[512]; //buffer to hold incoming and outgoing packets
 
 const byte pinouts = 3;
 // red, green, blue
-byte pins[pinouts] = {  4, 12, 14, };
+byte pins[pinouts] = {  4, 14, 12, };
 
 int pin_values[pinouts] = {0,0,0};
 

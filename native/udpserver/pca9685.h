@@ -23,11 +23,11 @@
 #include "WProgram.h"
 #endif
 
-#include "Wire.h"
+#include <Wire.h>
 
 /**
   Version 1.0.0
-	(Semantic Versioning)
+  (Semantic Versioning)
 **/
  
 //Register defines from data sheet
@@ -47,15 +47,15 @@ class PCA9685
     void begin(int i2cAddress);
     bool init();
 
-	void setLEDOn(int ledNumber);
-	void setLEDOff(int ledNumber);
-	void setLEDDimmed(int ledNumber, byte amount);
-	void writeLED(int ledNumber, word outputStart, word outputEnd);
-	
+  void setLEDOn(int ledNumber);
+  void setLEDOff(int ledNumber);
+  void setLEDDimmed(int ledNumber, byte amount);
+  void writeLED(int ledNumber, word outputStart, word outputEnd);
+  
   private:
-	void writeRegister(int regaddress, byte val);
-	word readRegister(int regAddress);
-	// Our actual i2c address:
-	byte _i2cAddress;
+  void writeRegister(int regaddress, byte val);
+  word readRegister(int regAddress);
+  // Our actual i2c address:
+  byte _i2cAddress;
 };
 #endif 
