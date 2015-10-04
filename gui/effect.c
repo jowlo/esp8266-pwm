@@ -14,9 +14,9 @@
 #include "effect.h"
 
 
-void glow(glowinfo *inp){
+void glow(effectinfo *inp){
 
-  glowinfo in;
+  effectinfo in;
   in = *inp;
   double reduce[STRIPS];
 	for(int i = 0; i < STRIPS; i++){
@@ -52,3 +52,27 @@ void glow(glowinfo *inp){
   send_state(in.state);
 }
 
+
+
+
+void flicker(effectinfo *inp){
+	effectinfo in;
+	in = *inp;
+
+
+  while(inp->loop == true) {
+		printf("in.loop: %d\n", in.loop);
+    usleep(1000*in.speed);
+		for(int i = 0; i < STRIPS; i++){
+			if(in.active[i] == 1){
+				in.state.rgba[i].alpha = in.state.rgba[i].alpha - rand()/((double)RAND_MAX/2);
+				if(in.state.rgba[i].alpha < 0) in.state.rgba[i].alpha = 0;
+		    if(rand() % 100 > 60) {
+		        in.state.rgba[i].alpha = in.state.rgba[i].alpha + rand()/(double)RAND_MAX;
+		        if(in.state.rgba[i].alpha > 1) in.state.rgba[i].alpha = 1;
+		    }
+			}
+  	}
+  	send_state(in.state);
+	}
+}

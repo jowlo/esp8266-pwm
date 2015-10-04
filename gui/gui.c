@@ -10,6 +10,7 @@
 GtkWidget         *main_window;
 GtkWidget         *color_chooser;
 GtkAdjustment     *glow_adjustment;
+GtkAdjustment     *flicker_adjustment;
 GtkListStore      *channel_list;
 GtkTreeView       *channel_view;
 GtkTreeSelection  *channel_select;
@@ -32,7 +33,8 @@ void  set_channel_color(GtkTreeModel *model, GtkTreePath *path, GtkTreeIter *ite
 void  refresh_chooser_first_channel(GtkTreeModel *model, GtkTreePath *path, GtkTreeIter *iter, gpointer data);
 
 
-glowinfo gin;
+effectinfo glowin;
+effectinfo flickerin;
 
 
 static inline u_int maxuint(u_int a, u_int b) {return a>b?a:b;}
@@ -58,6 +60,7 @@ int main (int argc, char *argv[])
     color_chooser = GTK_WIDGET(gtk_builder_get_object(builder,"color_chooser"));
     main_window = GTK_WIDGET(gtk_builder_get_object(builder,"main_window"));
     glow_adjustment = GTK_ADJUSTMENT(gtk_builder_get_object(builder,"glow_steps"));
+    flicker_adjustment= GTK_ADJUSTMENT(gtk_builder_get_object(builder,"flicker_speed"));
 
     //setting up channels
     channel_list= GTK_LIST_STORE(gtk_builder_get_object(builder,"channel_list"));
@@ -121,46 +124,41 @@ void color_changed (GObject *o, GParamSpec *pspect, gpointer data) {
 
   if(autosend) send_state(current_state);
 }
-/*
+
 void btn_flicker_clicked(GtkButton *button, gpointer user_data){
   gboolean mode;
   mode = gtk_toggle_button_get_active((GtkToggleButton *) button);
   if(mode == TRUE){
-	  if(pthread_create(&worker, NULL, flicker, NULL)) {
+
+  	flickerin.speed = (int)gtk_adjustment_get_value(flicker_adjustment);
+    flickerin.loop = true;
+		for(int i = 0; i < STRIPS; i++){
+			flickerin.active[i] = 0;
+		}
+	
+	  get_active_strips(flickerin.active);
+	  flickerin.state = current_state;
+	  if(pthread_create(&worker, NULL, flicker, &flickerin)) {
 	  	g_print(stderr, "Error creating thread\n");
 	  }  
   } else {
-    flicker_loop = false;
+    flickerin.loop = false;
+		printf("main thread: loop: %d\n", flickerin.loop);
   }
 }
 
-void flicker(){
-  u_int alpha;
-  alpha = current_alpha;
-  flicker_loop = true;
-
-  while(flicker_loop) { 
-    send_color(current_color, alpha);
-    usleep(100*flicker_speed);
-    alpha = maxuint(1, alpha-1);
-    if(rand() % 200 > 195) {
-        alpha = maxuint(alpha + rand() % 40, 100);
-    }
-  }
-}
-*/
 
 void btn_glow_clicked(GtkButton *button, gpointer user_data){
-  gin.steps = (int)gtk_adjustment_get_value(glow_adjustment);
+  glowin.steps = (int)gtk_adjustment_get_value(glow_adjustment);
 
 	for(int i = 0; i < STRIPS; i++){
-		gin.active[i] = 0;
+		glowin.active[i] = 0;
 	}
 
-  get_active_strips(gin.active);
-  gin.state = current_state;
+  get_active_strips(glowin.active);
+  glowin.state = current_state;
 
-	if(pthread_create(&worker, NULL, glow, &gin)) {
+	if(pthread_create(&worker, NULL, glow, &glowin)) {
 		g_print(stderr, "Error creating thread\n");
 	}  
 }

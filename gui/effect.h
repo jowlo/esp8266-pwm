@@ -1,3 +1,4 @@
 
 
-void glow(glowinfo *inp);
+void glow(effectinfo *inp);
+void flicker(effectinfo *inp);

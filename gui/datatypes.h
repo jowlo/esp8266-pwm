@@ -15,8 +15,9 @@ typedef struct {
 typedef struct {
   bool  active[STRIPS];
   u_int steps;
+	u_int speed;
   ledstate state;
-  GtkWidget *color_chooser;
-} glowinfo;
+	bool loop;
+} effectinfo;
 
 #endif /* DATATYPES_H */
