@@ -3,6 +3,7 @@
 
 #include <gdk/gdk.h>
 #include <gtk/gtk.h>
+#include <stdbool.h>
 
 #define STRIPS 2
 #define PWM_MAX 1024
@@ -12,7 +13,7 @@ typedef struct {
 } ledstate;
 
 typedef struct {
-  u_int strip;
+  bool  active[STRIPS];
   u_int steps;
   ledstate state;
   GtkWidget *color_chooser;

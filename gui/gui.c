@@ -152,10 +152,13 @@ void flicker(){
 
 void btn_glow_clicked(GtkButton *button, gpointer user_data){
   gin.steps = (int)gtk_adjustment_get_value(glow_adjustment);
-  gin.strip = 0;
-  gin.state = current_state;
 
-  g_print("test: red %g\n", gin.state.rgba[gin.strip].red);
+	for(int i = 0; i < STRIPS; i++){
+		gin.active[i] = 0;
+	}
+
+  get_active_strips(gin.active);
+  gin.state = current_state;
 
 	if(pthread_create(&worker, NULL, glow, &gin)) {
 		g_print(stderr, "Error creating thread\n");
@@ -213,4 +216,21 @@ void  refresh_chooser_first_channel(GtkTreeModel *model, GtkTreePath *path, GtkT
   guint channel;
   gtk_tree_model_get(model, iter, 0, &channel, -1);
   gtk_color_selection_set_current_rgba((GtkColorSelection *)color_chooser, &current_state.rgba[channel]);
+}
+
+/* callback for active channel array generation */
+void  get_active_strips_cb(GtkTreeModel *model, GtkTreePath *path, GtkTreeIter *iter, gpointer data){
+  guint channel;
+	bool *active;
+	active = (bool *)data;
+  gtk_tree_model_get(model, iter, 0, &channel, -1);
+	if(gtk_tree_selection_iter_is_selected(GTK_TREE_SELECTION(channel_select),iter) == TRUE){
+		 printf("channel %d active\n", channel);
+		 active[channel] = 1;
+	} 
+
+}
+
+void get_active_strips(bool *active){
+	  gtk_tree_selection_selected_foreach(GTK_TREE_SELECTION(channel_select), get_active_strips_cb, active);
 }

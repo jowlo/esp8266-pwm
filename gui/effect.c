@@ -18,33 +18,37 @@ void glow(glowinfo *inp){
 
   glowinfo in;
   in = *inp;
-  double reduce = in.state.rgba[in.strip].alpha/in.steps;
+  double reduce[STRIPS];
+	for(int i = 0; i < STRIPS; i++){
+		printf("active %d: %d", i, in.active[i]);
+		if(in.active[i] == 1){
+			reduce[i] = in.state.rgba[i].alpha/in.steps;
+	  	if((u_int)(in.state.rgba[i].alpha * PWM_MAX) == 0){
+ 		 	  in.state.rgba[i].alpha = 1;
+  		}
+		} else {
+			reduce[i] = 0;
+		}
+	}
 
 #ifdef DEBUG
   g_print("=== glow ===\n");
   g_print("\tsteps %d\n", in.steps);
-  g_print("\tstrip %d\n", in.strip);
-  g_print("\tred %g\n", in.state.rgba[in.strip].red);
   g_print("\treduce %g\n", reduce);
 #endif
 
-  if((u_int)(in.state.rgba[in.strip].alpha * PWM_MAX) == 0){
-    in.state.rgba[in.strip].alpha = 1;
-  }
 
-#ifdef DEBUG
-  g_print("alpha before: %g\n", in.state.rgba[in.strip].alpha);
-#endif
-
-  for(int i = 0; i<in.steps; i++) { 
-#ifdef DEBUG
-    g_print("alpha: %g\n", in.state.rgba[in.strip].alpha);
-#endif
+  for(int i = 0; i <in.steps; i++) { 
     usleep(100);
-    in.state.rgba[in.strip].alpha -= reduce;
+    for(int i = 0; i < STRIPS; i++){
+			in.state.rgba[i].alpha -= reduce[i];
+		}
     send_state(in.state);
   }
-  in.state.rgba[in.strip].alpha = 0;
+	for(int i = 0; i < STRIPS; i++){
+  	if(in.active[i] == 1) in.state.rgba[i].alpha = 0;
+	}
+		
   send_state(in.state);
 }
 
