@@ -7,6 +7,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <gdk/gdk.h>
+
+#include "datatypes.h"
+#include "gui.h"
+
 struct addrinfo hints;
 struct addrinfo* res;
 int fd;
@@ -51,9 +56,7 @@ int udp_send(size_t size, char* data) {
   if (err==-1) {
       printf("%s",strerror(errno));
   }
-  g_print("sending... %s", data);
   return err;
-
 }
 
 u_int * color_byte_to_pwm(u_int *color, u_int *out){
@@ -61,6 +64,7 @@ u_int * color_byte_to_pwm(u_int *color, u_int *out){
   out[1] = color[1] * 4;
   out[2] = color[2] * 4;
 }
+
 
 void send_color(u_int *color, u_int alpha) {
   unsigned char packet[8];
@@ -83,6 +87,47 @@ void send_color(u_int *color, u_int alpha) {
   //printf("color: %d, %d, %d\n", color[0], color[1],color[2]);
   //printf("packet: %x %x, %x %x, %x %x\n", packet[2], packet[3], packet[4], packet[5], packet[6], packet[7]);
   udp_send(8, packet);
+}
+
+void rgba_to_pwm(GdkRGBA *in, u_int *out){
+ 
+#ifdef DEBUG
+  printf("[rgba_to_pwm]\n");
+  printf("\tred:   %g\n", in->red);
+  printf("\tgreen: %g\n", in->green);
+  printf("\tblue:  %g\n", in->blue);
+  printf("\talpha: %g\n", in->alpha);
+#endif 
+  
+  out[0] = (u_int)(in->red*PWM_MAX*in->alpha);
+  out[1] = (u_int)(in->green*PWM_MAX*in->alpha);
+  out[2] = (u_int)(in->blue*PWM_MAX*in->alpha);
+}
+
+void send_state(ledstate state){
+  unsigned char packet[2+6*STRIPS];
+
+  packet[0] = 0;
+  packet[1] = 0x7e; // pwm command
+
+  u_int color[3];
+
+  for(int i = 0; i < STRIPS; i++){
+    rgba_to_pwm(&state.rgba[i], color);
+
+    //red
+    packet[2+ (6*i) + 0] = (color[0] >> 8) & 0xff;
+    packet[2+ (6*i) + 1] =  color[0] & 0xff;
+    //green
+    packet[2+ (6*i) + 2] = (color[1] >> 8) & 0xff;
+    packet[2+ (6*i) + 3] =  color[1] & 0xff;
+    //blue
+    packet[2+ (6*i) + 4] = (color[2] >> 8) & 0xff;
+    packet[2+ (6*i) + 5] =  color[2] & 0xff;
+
+  }
+  
+  udp_send(2+6*STRIPS, packet);
 }
 
 void send_rgb(u_int r, u_int g, u_int b, u_int alpha){

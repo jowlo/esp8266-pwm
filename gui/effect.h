@@ -1,0 +1,3 @@
+
+
+void glow(glowinfo *inp);
