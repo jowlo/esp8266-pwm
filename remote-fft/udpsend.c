@@ -57,7 +57,8 @@ int udp_send(size_t size, char* data) {
 
 }
 
-int main(int argc, char* argv[]){
+
+int main_no(int argc, char* argv[]){
 
   if(argc > 3) {
     if(udp_setup(argv[2], argv[3]) == -1){

@@ -14,9 +14,14 @@ GtkAdjustment     *flicker_adjustment;
 GtkListStore      *channel_list;
 GtkTreeView       *channel_view;
 GtkTreeSelection  *channel_select;
+GtkEntry          *ip;
+GtkEntry          *port;
+
+
 
 pthread_t worker;
 bool flicker_loop = false;
+bool connected = false;
 
 ledstate current_state;
 
@@ -42,7 +47,6 @@ static inline u_int maxuint(u_int a, u_int b) {return a>b?a:b;}
 
 int main (int argc, char *argv[])
 {
-  	udp_setup("192.168.178.37", "5555");
 
     GtkBuilder      *builder; 
     GError          *error = NULL;
@@ -61,6 +65,8 @@ int main (int argc, char *argv[])
     main_window = GTK_WIDGET(gtk_builder_get_object(builder,"main_window"));
     glow_adjustment = GTK_ADJUSTMENT(gtk_builder_get_object(builder,"glow_steps"));
     flicker_adjustment= GTK_ADJUSTMENT(gtk_builder_get_object(builder,"flicker_speed"));
+    ip = GTK_ENTRY(gtk_builder_get_object(builder,"net_ip"));
+    port= GTK_ENTRY(gtk_builder_get_object(builder,"net_port"));
 
     //setting up channels
     channel_list= GTK_LIST_STORE(gtk_builder_get_object(builder,"channel_list"));
@@ -81,7 +87,6 @@ int main (int argc, char *argv[])
 
     renderer = gtk_cell_renderer_text_new();
     column = gtk_tree_view_column_new_with_attributes("Channel", renderer, "text", 0, NULL);
-
     gtk_tree_view_append_column(GTK_TREE_VIEW(channel_view), column);
 
 
@@ -96,7 +101,7 @@ int main (int argc, char *argv[])
 
     gtk_main ();
 
-    return 0;
+	  return 1;
 }
 
 
@@ -104,6 +109,14 @@ void btn_autosend(GtkButton *button, gpointer user_data){
   autosend = gtk_switch_get_active((GtkSwitch *) button);
   if(autosend) color_changed();
 }
+
+void btn_connect_clicked(GtkButton *button, gpointer user_data){
+  g_print("ip: %s\n", gtk_entry_get_text(ip));
+  g_print("port: %s\n", gtk_entry_get_text(port));
+  udp_setup((char *)gtk_entry_get_text(ip), (char *)gtk_entry_get_text(port));
+  connected = true;
+}
+
 
 void color_changed (GObject *o, GParamSpec *pspect, gpointer data) {
 	/*
@@ -122,7 +135,7 @@ void color_changed (GObject *o, GParamSpec *pspect, gpointer data) {
 
 	gtk_tree_selection_selected_foreach(GTK_TREE_SELECTION(channel_select), set_channel_color, NULL);
 
-  if(autosend) send_state(current_state);
+  if(autosend && connected) send_state(current_state);
 }
 
 void btn_flicker_clicked(GtkButton *button, gpointer user_data){

@@ -58,10 +58,12 @@ void glow(effectinfo *inp){
 void flicker(effectinfo *inp){
 	effectinfo in;
 	in = *inp;
-
+	double basealpha[STRIPS];
+  for(int i = 0; i < STRIPS; i++){
+	  basealpha[i] = in.state.rgba[i].alpha;
+  }
 
   while(inp->loop == true) {
-		printf("in.loop: %d\n", in.loop);
     usleep(1000*in.speed);
 		for(int i = 0; i < STRIPS; i++){
 			if(in.active[i] == 1){
@@ -69,7 +71,7 @@ void flicker(effectinfo *inp){
 				if(in.state.rgba[i].alpha < 0) in.state.rgba[i].alpha = 0;
 		    if(rand() % 100 > 60) {
 		        in.state.rgba[i].alpha = in.state.rgba[i].alpha + rand()/(double)RAND_MAX;
-		        if(in.state.rgba[i].alpha > 1) in.state.rgba[i].alpha = 1;
+		        if(in.state.rgba[i].alpha > basealpha[i]) in.state.rgba[i].alpha = basealpha[i];
 		    }
 			}
   	}

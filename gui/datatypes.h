@@ -5,8 +5,8 @@
 #include <gtk/gtk.h>
 #include <stdbool.h>
 
-#define STRIPS 2
-#define PWM_MAX 1024
+#define STRIPS 10
+#define PWM_MAX 4096
 
 typedef struct {
   GdkRGBA rgba[STRIPS];

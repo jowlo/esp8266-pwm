@@ -1,4 +1,4 @@
-#include <Wire.h>
+#include <PCA9685.h>
 
 #include <WiFiClientSecure.h>
 #include <ESP8266WiFi.h>
@@ -9,15 +9,9 @@
 #include <Wire.h>
 
 
+#define PCA_COUNT 2
+
 #include "config.h"
-/*
- * 31 mar 2015
- * This sketch display UDP packets coming from an UDP client.
- * On a Mac the NC command can be used to send UDP. (nc -u 192.168.1.101 2390). 
- *
- * Configuration : Enter the ssid and password of your Wifi AP. Enter the port number your server is listening on.
- *
- */
 
 // Command flags
 #define PWM_CMD  126 // 0x7e
@@ -32,10 +26,25 @@
 
 
 
+// no-cost stream operator as described at 
+// http://arduiniana.org/libraries/streaming/
+template<class T>
+inline Print &operator <<(Print &obj, T arg)
+{  
+  obj.print(arg); 
+  return obj; 
+}
+
 
 /* inline functions */
 inline int max ( int a, int b ) { return a > b ? a : b; }
 inline int min ( int a, int b ) { return a > b ? b : a; }
+
+/* PCA9685 Boards */
+PCA9685 pca[PCA_COUNT] = {
+  PCA9685(0x0, PCA9685_MODE_N_DRIVER, 800.0),
+  PCA9685(0x1, PCA9685_MODE_N_DRIVER, 800.0)
+  };
 
  
 int status = WL_IDLE_STATUS;
@@ -44,16 +53,12 @@ unsigned int localPort = 5555;      // local port to listen for UDP packets
 
 byte buf[512]; //buffer to hold incoming and outgoing packets
 
-const byte pinouts = 3;
-// red, green, blue
-byte pins[pinouts] = {  4, 14, 12, };
+int pin_values[PCA_COUNT*16];
 
-int pin_values[pinouts] = {0,0,0};
-
-int pwm_max = 1023;
+int pwm_max = PCA9685_MAX_VALUE;
 int pwm_min = 0;
 
-int reduce = 1023;
+int reduce = pwm_max;
 
 int cutoff = 0;
 
@@ -67,8 +72,13 @@ void setup()
 {
   // Open serial communications and wait for port to open:
   Serial.begin(115200);
-  while (!Serial) {
-    ; // wait for serial port to connect. Needed for Leonardo only
+
+  // set up 2-Wire
+  Wire.begin(12, 14);
+
+  // set up pca pwm boards
+  for(int i = 0; i < PCA_COUNT; i++){
+    pca[i].setup();
   }
 
   // setting up Station AP
@@ -107,7 +117,7 @@ void loop()
     Udp.read(buf,noBytes); // read the packet into the buffer
 
 
-    //display_packet(buf, noBytes)
+    //display_packet(buf, noBytes);
     
     int cmd = read2b(buf, 0);
     //Serial.print("Command ");
@@ -161,7 +171,7 @@ int read2b(byte *buf, int start) {
 }
 
 void parse_pwm(byte* buf, int start, int total){
-  for(byte i = 0; i < pinouts; i++){
+  for(byte i = 0; i < PCA_COUNT*16; i++){
     if(single_channel) {
       pin_values[i] = max( pin_values[i]-reduce, min(pwm_max, max(pwm_min, read2b(buf, start+(2*(single_channel-1))))));
     } else {
@@ -170,7 +180,14 @@ void parse_pwm(byte* buf, int start, int total){
     if(binary_mode) {
       pin_values[i] = pin_values[i] > cutoff ? pwm_max : 0;
     }
-    analogWrite(pins[i], (pin_values[i] < cutoff)? 0 : pin_values[i]);
+    //Serial << "Setting Board #" << i/16 << " Pin #" << i%16 << " to " << pin_values[i] << "\n";
+    pca[i/16].getPin(i%16).setValue((pin_values[i] < cutoff)? 0 : pin_values[i]);
+    
+    //analogWrite(pins[i], );
+  }
+  for(int i = 0; i < PCA_COUNT; i++){
+    //Serial << "Writing to Board #" << i << "\n";
+    pca[i].writeAllPins();
   }
 }
 /* settings cmd

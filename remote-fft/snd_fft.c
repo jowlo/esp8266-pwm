@@ -27,6 +27,11 @@ bool showbars = false;
 
 struct holder {
 	SNDFILE *infile;
+	snd_pcm_t *inhandle;
+  snd_pcm_hw_params_t *hw_params;
+	snd_pcm_format_t format;
+	unsigned int rate;
+
 	SF_INFO ininfo;
 
 	snd_pcm_t *alsa_handle;
@@ -47,7 +52,7 @@ struct holder {
   double *power_spectrum;
   double *logx;
 
-	double max;
+	double *max;
 };
 
 static void prepare_fftw(struct holder *holder)
@@ -68,7 +73,9 @@ static void prepare_fftw(struct holder *holder)
 	holder->output = fftw_alloc_complex(holder->fftout_count);
 	if (!holder->output)
 		errx(3, "cannot allocate output");
- 
+  
+  holder->max = (double *)malloc(holder->fftout_count * sizeof(double));
+  for(int i = 0; i<holder->fftout_count; i++) holder->max[i] = 0.000000000000001;//;// FLT_MIN;
 //  // null all
 //	for (a = 0; a < holder->samples_count; a++) {
 //		holder->samples[a] = 0;
@@ -142,18 +149,6 @@ static void compute_fftw(struct holder *holder)
 
 static void show_graph(struct holder *holder)
 {
-  // allocate power spectrum
-  if(holder->power_spectrum == NULL) {
-    holder->power_spectrum = (double *)malloc(holder->fftout_count * sizeof(double));
-    holder->logx = (double *)malloc(holder->fftout_count * sizeof(double));
-  }
-
-  // fill power spectrum
-  for(int i = 0; i < holder->fftout_count; i++) {
-    holder->power_spectrum[i] = (holder->output[i][0] * holder->output[i][0]) + (holder->output[i][1] * holder->output[i][1]) / holder->samples_count;
-    if(holder->power_spectrum[i] < 0) holder->power_spectrum[i] = - holder->power_spectrum[i];
-  }
-
   // log10 on x axis
 //  for(int i = 1; i < holder->fftout_count; i++) {
 //    holder->power_spectrum[i] = log10(holder->power_spectrum[i]);
@@ -186,39 +181,44 @@ static void show_graph(struct holder *holder)
   memset(&send[0], 0, sizeof(send));
   send[1] = 0x7e; // pwm command
 
-  int j = holder->fftout_count/POWER_RANGES;
-  for(int i = 1; i < holder->fftout_count; i++) {
 
-    sum += holder->power_spectrum[i];
+  int j = (holder->fftout_count/2)/POWER_RANGES;
+  for(int i = 0; i < holder->fftout_count/2; i++) {
+    //sum += holder->power_spectrum[i]/j;
+    
+    if(holder->max[i/j] < holder->power_spectrum[i]) holder->max[i/j] = holder->power_spectrum[i];
+
+    if(holder->power_spectrum[i]/holder->max[i/j] > sum){
+      sum = holder->power_spectrum[i]/holder->max[i/j];
+    } 
 
     if(i%j == 0){
+      //sum = sqrt(sum);
+      //sum /= 100;
+
       //values
-      //printf("%7d: %.7f\t", j, sum);
-      //
+      printf("%7d: %.7f\t", i/j, sum);
+      
       //improvised bars
       if(showbars){
-      printf("%3d%.*s%.*s", i/j, ((int)(sum)), "================", 16-((int)(sum)<16?((int)sum):16), "                ");
+        printf("%3d%.*s%.*s", i/j, ((int)(sum*16)), "================", 16-((int)(sum*16)<16?((int)(sum*16)):16), "                ");
+      }
+      if(sum*1024 > 30){
+        send[2+ (i/j)*2] = ((u_int)(sum*1024) >> 8) & 0xff;
+        send[2+ (i/j)*2+1] = (u_int)(sum*1024) & 0xff ;
       }
 
-      //char buf[10];
-      //sprintf(buf, "%d:%f ", j, sum);
-      //strcat(send, buf);
-      //printf("%s", send);
-      send[2+ (i/j-1)*2] = ((int)sum >> 8) & 0xff;
-      send[2+ (i/j-1)*2+1] = (int)sum & 0xff ;
       sum = 0;
-      //j = j*2;
     }
-
   }
-  if(showbars) printf("\n");
-  //printf("%s",send);
+  //if(showbars) printf("\n");
+  printf("\n");
+  printf("%s",send);
   //strcat(send, "\n");
   if(net){
     int ret = udp_send(sizeof(send), send);
+    //printf("net return = %d", ret);
   }
-  //printf("net return = %d", ret);
-
 }
 
 static void write_snd(struct holder *holder, float const *samples,
@@ -237,9 +237,13 @@ void decode(struct holder *holder)
 {
 	unsigned int channels = holder->ininfo.channels;
       printf("channels::%d ", channels);
-	float buf[channels * holder->samples_count];
-	int count, short_read;
+	int16_t *buf;//[channels * holder->samples_count];
+	float *fbuf;//[channels * holder->samples_count];
+  buf = malloc(holder->samples_count * snd_pcm_format_width(holder->format) / 8 * 2);
+  fbuf = malloc(holder->samples_count*sizeof(float));
 
+	int count, short_read;
+/*
 	do {
 		count = sf_readf_float(holder->infile, buf,
 				holder->samples_count );
@@ -252,7 +256,7 @@ void decode(struct holder *holder)
     if (count <= 0)
 			break;
 
-		/* the last chunk? */
+		// the last chunk? 
 		short_read = count != holder->samples_count;
 		if (!short_read) {
 
@@ -270,20 +274,134 @@ void decode(struct holder *holder)
 
 		write_snd(holder, buf, count);
 	} while (!short_read);
+*/
+
+  while(1) {
+    count = snd_pcm_readi(holder->inhandle, buf, holder->samples_count);
+    //printf("samples read: %d\n", count);
+    // display s16_le buffer 
+    //for(int i = 0; i < holder->samples_count; i++){
+    //  printf("b%3d::%d \n",i, buf[i]);
+    //}
+
+    for(int i = 0; i < holder->samples_count; i++){
+      holder->samples[i] = (float)buf[i]/32768.0;
+    //  printf("bf%d::%g \n",i, holder->samples[i]);
+    }
+
+	  //compute_avg(holder, fbuf, count);
+    
+    // display samples 
+    //for(int i = 0; i < holder->samples_count; i++)
+    //  printf("s%d::%f \n",i, holder->samples[i]);
+
+		compute_fftw(holder);
+    
+    // allocate power spectrum
+    if(holder->power_spectrum == NULL) {
+      holder->power_spectrum = (double *)malloc(holder->fftout_count * sizeof(double));
+    }
+
+    // fill power spectrum
+    for(int i = 0; i < holder->fftout_count; i++) {
+      if(holder->power_spectrum[i] < 0) holder->power_spectrum[i] = - holder->power_spectrum[i];
+      holder->power_spectrum[i] = (holder->output[i][0] * holder->output[i][0]) + (holder->output[i][1] * holder->output[i][1]) / holder->samples_count;
+    }
+    
+    // log on x axis
+    //for(int i = 1; i < holder->fftout_count; i++) {
+    //  holder->power_spectrum[i] = log(holder->power_spectrum[i]);
+    //}
+    
+    // display power_spectrum
+    //for(int i = 0; i < holder->fftout_count; i++)
+    //printf("p%d::%f \n",i, holder->power_spectrum[i]);
+	   
+	   show_graph(holder);
+  }
 }
 
 void open_io(struct holder *holder, const char *filename)
 {
 	int err;
+	holder->format = SND_PCM_FORMAT_S16_LE;
+	holder->rate = 8000;
 
+  if ((err = snd_pcm_open (&holder->inhandle, filename, SND_PCM_STREAM_CAPTURE, 0)) < 0) {
+    fprintf (stderr, "cannot open audio device %s (%s)\n", 
+             filename,
+             snd_strerror (err));
+    exit (1);
+  }
+
+  fprintf(stdout, "audio interface opened\n");
+		   
+  if ((err = snd_pcm_hw_params_malloc (&holder->hw_params)) < 0) {
+    fprintf (stderr, "cannot allocate hardware parameter structure (%s)\n",
+             snd_strerror (err));
+    exit (1);
+  }
+
+  fprintf(stdout, "hw_params allocated\n");
+				 
+  if ((err = snd_pcm_hw_params_any (holder->inhandle, holder->hw_params)) < 0) {
+    fprintf (stderr, "cannot initialize hardware parameter structure (%s)\n",
+             snd_strerror (err));
+    exit (1);
+  }
+
+  fprintf(stdout, "hw_params initialized\n");
+	
+  if ((err = snd_pcm_hw_params_set_access (holder->inhandle, holder->hw_params, SND_PCM_ACCESS_RW_INTERLEAVED)) < 0) {
+    fprintf (stderr, "cannot set access type (%s)\n",
+             snd_strerror (err));
+    exit (1);
+  }
+
+  fprintf(stdout, "hw_params access setted\n");
+	
+  if ((err = snd_pcm_hw_params_set_format (holder->inhandle, holder->hw_params, holder->format)) < 0) {
+    fprintf (stderr, "cannot set sample format (%s)\n",
+             snd_strerror (err));
+    exit (1);
+  }
+
+  fprintf(stdout, "hw_params format setted\n");
+	
+  if ((err = snd_pcm_hw_params_set_rate_near (holder->inhandle, holder->hw_params, &holder->rate, 0)) < 0) {
+    fprintf (stderr, "cannot set sample rate (%s)\n",
+             snd_strerror (err));
+    exit (1);
+  }
+	
+  fprintf(stdout, "hw_params rate setted\n");
+
+  if ((err = snd_pcm_hw_params_set_channels(holder->inhandle, holder->hw_params, 2)) < 0) {
+    fprintf (stderr, "cannot set channel count (%s)\n",
+             snd_strerror (err));
+    exit (1);
+  }
+
+  fprintf(stdout, "hw_params channels setted\n");
+	
+  if ((err = snd_pcm_hw_params(holder->inhandle, holder->hw_params)) < 0) {
+    fprintf (stderr, "cannot set parameters (%s)\n",
+             snd_strerror (err));
+    exit (1);
+  }
+
+/*
 	if (!strcmp(filename, "-"))
-		holder->infile = sf_open_fd(STDIN_FILENO, SFM_READ,
-				&holder->ininfo, 1);
-	else
-		holder->infile = sf_open(filename, SFM_READ, &holder->ininfo);
+		holder->infile = sf_open_fd(STDIN_FILENO, SFM_READ, &holder->ininfo, 1);
+  else{
 
-	if (holder->infile == NULL)
-		errx(1, "open in: %s", sf_strerror(NULL));
+	  //holder->infile = sf_open(filename, SFM_READ, &holder->ininfo);
+	  snd_pcm_open(&holder->inhandle, filename, SND_PCM_STREAM_CAPTURE, 0);
+	  snd_pcm_prepare(&holder->inhandle);
+  }
+
+//	if (holder->infile == NULL)
+//		errx(1, "open in: %s", sf_strerror(NULL));
 
 
 	err = snd_pcm_open(&holder->alsa_handle, "default",
@@ -297,13 +415,16 @@ void open_io(struct holder *holder, const char *filename)
 	if (err < 0)
 		errx(1, "alsa set_params: %s", snd_strerror(err));
 
+*/
+    holder->ininfo.channels = 1;
+    holder->ininfo.samplerate = holder->rate;
 }
 
 void close_io(struct holder *holder)
 {
 	endwin();
-	snd_pcm_close(holder->alsa_handle);
-	sf_close(holder->infile);
+	snd_pcm_close(holder->inhandle);
+//	sf_close(holder->infile);
 }
 
 int main(int argc, char **argv)
@@ -329,12 +450,6 @@ int main(int argc, char **argv)
   }
   if(argc >4 && strcmp(argv[4], "-v") == 0) showbars = true;
     
-
-	/* do we have enough data? no = clamp the graph 
-	if (holder.width > holder.samples_count / 2)
-		holder.width = holder.samples_count / 2;
-	*/
-
 	prepare_fftw(&holder);
 
 	decode(&holder);

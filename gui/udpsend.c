@@ -92,11 +92,11 @@ void send_color(u_int *color, u_int alpha) {
 void rgba_to_pwm(GdkRGBA *in, u_int *out){
  
 #ifdef DEBUG
-  printf("[rgba_to_pwm]\n");
-  printf("\tred:   %g\n", in->red);
-  printf("\tgreen: %g\n", in->green);
-  printf("\tblue:  %g\n", in->blue);
-  printf("\talpha: %g\n", in->alpha);
+//  printf("[rgba_to_pwm]\n");
+//  printf("\tred:   %g\n", in->red);
+//  printf("\tgreen: %g\n", in->green);
+//  printf("\tblue:  %g\n", in->blue);
+//  printf("\talpha: %g\n", in->alpha);
 #endif 
   
   out[0] = (u_int)(in->red*PWM_MAX*in->alpha);
