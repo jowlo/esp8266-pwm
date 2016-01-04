@@ -2,6 +2,8 @@ import socket
 import binascii
 import math
 import time
+from easyfft.easyfft import FFT
+import numpy as np
 
 UDP_IP = "192.168.178.39"
 UDP_PORT = 5555
@@ -12,6 +14,7 @@ color_correction = [1, 0.70, 0.25]
 #color_correction = [1, 1, 1]
 gamma = 2.8
 GROUPS = [[1], [2, 3], [4, 5, 6], [7, 8], [9]]
+FFT_INST = FFT()
 
 
 white = [1, 1, 1]
@@ -61,8 +64,20 @@ def full_color_state(color):
 def rainbow_colors(num=2000, freq=.03):
     """Return list of rainbow colors with num elements"""
     colors = []
-    for i in range(2000):
+    for i in range(num):
         colors.append([math.sin(freq * i + offset) * 0.5 + 0.5 for offset in range(0, 6, 2)])
+    return colors
+
+
+def heat_colors(num=100, freq=.05):
+    """Return list of rainbow colors with num elements"""
+    colors = []
+    for i in range(num):
+        color = []
+        color.append(-math.sin(freq * i + 1) * 0.5 + 0.5)
+        color.append(0)
+        color.append(math.sin(freq * i) * 0.5 + 0.5)
+        colors.append(color)
     return colors
 
 
@@ -191,6 +206,65 @@ def numbering():
         print(i)
         send_state(set_strips(state, [i], [1, 1, 1]), setup())
         time.sleep(1)
+
+
+def fft_init(delay=0.03):
+    if not FFT_INST.run_thread:
+        FFT_INST.start_analyse_thread()
+    time.sleep(delay)
+
+
+def fft_destroy():
+    FFT_INST.stop_analyse_thread()
+
+
+def fft_test(mode='EQ', color=white, channel=0, scale=1, delay=0.03, decay=0.8, groups=GROUPS):
+    fft_init()
+    power_max = []
+    cycle = 1
+    state = state_off()
+    while True:
+        cycle = (cycle + 1)%100
+        colors = heat_colors()
+        power = FFT_INST.matrix[:]
+        power = [int(p**2) for p in power]
+        if len(power) != len(power_max):
+            power_max = [0]*len(power)
+        power_max = [max(a, b) for a,b in zip(power, power_max)]
+        #intensity = [int(p**2/10) for p in power]
+        intensity = [a/(b/100) for a,b in zip(power, power_max)]
+        intensity = [int(i*scale) for i in intensity]
+        print(power_max, intensity)
+        if mode is 'EQ':
+            for i in range(len(GROUPS)):
+                if i < len(power):
+                    set_strips(state, GROUPS[i], colors[np.clip(intensity[i], 0, 99)])
+        elif mode is 'PULSE_HEAT':
+            state = full_color_state(colors[np.clip(intensity[channel], 0, 99)])
+        elif mode is 'PULSE_COLOR':
+            state = full_color_state(alpha(color, intensity[channel]/100))
+        elif mode is 'PULSE_RAINBOW':
+            state = full_color_state(alpha(rainbow_colors(num=100)[cycle], intensity[channel]/100))
+        elif mode is 'MOVE_BIT_COLOR':
+            state.insert(0, alpha(color, intensity[channel]/100))
+            state.pop()
+            print(state)
+        elif mode is 'MOVE_BIT_DECAY':
+            nextstate = state_off()
+            for i in range(1,len(groups)):
+                set_strips(nextstate, groups[i], alpha(state[groups[i-1][0]], decay))
+            set_strips(nextstate, groups[0], alpha(color, intensity[channel]/100))
+            state = nextstate[:]
+        elif mode is 'MOVE_BIT_HEAT':
+            nextstate = state_off()
+            for i in range(1,len(groups)):
+                set_strips(nextstate, groups[i], state[groups[i-1][0]])
+            set_strips(nextstate, groups[0], colors[np.clip(intensity[channel], 0, 99)])
+            state = nextstate[:]
+
+        send_state(state, setup())
+        time.sleep(delay)
+
 
 """
 iterate_states(led_funct(state_off(), 100, rainbow_moving_state, alpha_state))
