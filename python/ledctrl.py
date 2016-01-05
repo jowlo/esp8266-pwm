@@ -4,6 +4,7 @@ import math
 import time
 from easyfft.easyfft import FFT
 import numpy as np
+from color import Color
 
 UDP_IP = "192.168.178.39"
 UDP_PORT = 5555
