@@ -32,8 +32,8 @@ class FFT:
         power = np.log10(np.abs(fourier)) ** 2
         power2 = power[:]
         # Araange array into 8 rows for the 8 bars on LED matrix
-        power = np.reshape(power, (8, self.buffersize/ 16))
-        matrix = np.int_(np.mean(power, axis=1))
+        # power = np.reshape(power, (8, self.buffersize/ 16))
+        # matrix = np.int_(np.mean(power, axis=1))
         # Try logarithmic binning here
         self.logpower = []
         start = 2
@@ -68,6 +68,17 @@ class FFT:
             self.read_data()
         else:
             return l
+        
+    def intensity(self, scale, power_max):
+        power = self.matrix[:]
+        power = [int(p**2) for p in power]
+        if len(power) != len(power_max):
+            power_max = [0]*len(power)
+        power_max = [max(a, b) for a,b in zip(power, power_max)]
+        #intensity = [int(p**2/10) for p in power]
+        intensity = [a/(b/100) for a,b in zip(power, power_max)]
+        intensity = [int(i*scale) for i in intensity]
+        return intensity, power_max
 
     def analyse(self, output=False, run=False):
         while self.run_thread or run:
