@@ -167,8 +167,7 @@ def fft_eq(colors=Color.heat_colors(), scale=1, delay=0.03):
         for i in range(len(GROUPS)):
             if i < len(intensity):
                 S.set_strips(state, GROUPS[i], colors[np.clip(intensity[i], 0, 99)])
-        N.send(state)
-        time.sleep(delay)
+        yield state
                         
                         
 def fft_pulse_map(colors=Color.heat_colors(), scale=1, delay=0.03, channel=0):
@@ -180,8 +179,7 @@ def fft_pulse_map(colors=Color.heat_colors(), scale=1, delay=0.03, channel=0):
         if DEBUG:
             print(power_max, intensity)
         state = S.full_color(colors[np.clip(intensity[channel], 0, len(colors)-1)])
-        N.send(state)
-        time.sleep(delay)
+        yield state
         
         
 def fft_pulse_color(color=Color.white, scale=1, delay=0.03, channel=0):
@@ -193,8 +191,7 @@ def fft_pulse_color(color=Color.white, scale=1, delay=0.03, channel=0):
         if DEBUG:
             print(power_max, intensity)
         state = S.full_color(Color.alpha(color, intensity[channel]/100))
-        N.send(state)
-        time.sleep(delay)
+        yield state
         
         
 def fft_pulse_cycle(cycle_colors=Color.rainbow_colors(), scale=1, delay=0.03, channel=0):
@@ -208,8 +205,7 @@ def fft_pulse_cycle(cycle_colors=Color.rainbow_colors(), scale=1, delay=0.03, ch
         if DEBUG:
             print(power_max, intensity)
         state = S.full_color(Color.alpha(cycle_colors[cycle], intensity[channel]/100))
-        N.send(state)
-        time.sleep(delay)
+        yield state
         
 
 def fft_move_color(color=Color.white, groups=GROUPS, channel=0, decay=0.8, scale=1, delay=0.03):
@@ -225,8 +221,7 @@ def fft_move_color(color=Color.white, groups=GROUPS, channel=0, decay=0.8, scale
             S.set_strips(nextstate, groups[i], Color.alpha(state[groups[i-1][0]], decay))
         S.set_strips(nextstate, groups[0], Color.alpha(color, intensity[channel]/100))
         state = nextstate[:]        
-        N.send(state)
-        time.sleep(delay)
+        yield state
         
 def fft_move_map(colors=Color.heat_colors(), groups=GROUPS, channel=0, scale=1, delay=0.03, decay=1):
     fft_init()
@@ -241,8 +236,7 @@ def fft_move_map(colors=Color.heat_colors(), groups=GROUPS, channel=0, scale=1, 
             S.set_strips(nextstate, groups[i], Color.alpha(state[groups[i-1][0]], decay))
         S.set_strips(nextstate, groups[0], colors[np.clip(intensity[channel], 0, 99)])
         state = nextstate[:]
-        N.send(state)
-        time.sleep(delay)
+        yield state
     
 
 def fft_test(mode='EQ', color=Color.white, channel=0, scale=1, delay=0.03, decay=0.8, groups=GROUPS):
