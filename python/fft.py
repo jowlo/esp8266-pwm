@@ -19,6 +19,8 @@ class FFT:
         self.buffer = np.zeros(self.buffersize)
         self.matrix = []
         self.logpower = []
+        self.power_max = []
+        self.power_min = []
         self.noise = []
         self.run_thread = False
         self.window = np.blackman(self.buffersize)
@@ -37,10 +39,10 @@ class FFT:
         # Try logarithmic binning here
         self.logpower = []
         start = 2
-        for i in [x ** 4 for x in range(1, 7)]:
+        for i in [x ** 3 for x in range(1, 9)]:
             # print(i, start, start+i)
             self.logpower.append(np.int_(np.amax(power2[start:start + i])))
-            start = start+i
+            start = start + i
         self.matrix = self.logpower
 
         #if remove_noise:
@@ -68,17 +70,33 @@ class FFT:
             self.read_data()
         else:
             return l
-        
-    def intensity(self, scale, power_max):
+
+    def intensity(self, max_val=100):
         power = self.matrix[:]
-        power = [int(p**2) for p in power]
-        if len(power) != len(power_max):
-            power_max = [0]*len(power)
-        power_max = [max(a, b) for a,b in zip(power, power_max)]
-        #intensity = [int(p**2/10) for p in power]
-        intensity = [a/(b/100) for a,b in zip(power, power_max)]
-        intensity = [int(i*scale) for i in intensity]
-        return intensity, power_max
+        power = [int(p ** 2) for p in power]
+        if len(power) != len(self.power_max):
+            self.power_max = [0] * len(power)
+        if len(power) != len(self.power_min):
+            self.power_min = [0] * len(power)
+
+        self.power_max = [max(a, b) for a,b in zip(power, self.power_max)]
+        self.power_min = [min(a, b) for a,b in zip(power, self.power_min)]
+        # Scaling attempts
+        #
+        # Okay:
+        # intensity = [int(p**2/10) for p in power]
+        #
+        # Good with low power
+        # intensity = [a/(b/100) for a,b in zip(power, self.power_max)]
+        #
+        # Min and Max scaling:
+        intensity = (max_val * (power - self.power_min)) // (self.power_max - self.power_min);
+
+        return intensity
+
+    def reset_scale(self):
+        self.power_max = []
+        self.power_min = []
 
     def analyse(self, output=False, run=False):
         while self.run_thread or run:
