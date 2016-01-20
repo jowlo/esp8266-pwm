@@ -1,0 +1,5 @@
+(fp_lib_table
+  (lib (name ESP8266)(type KiCad)(uri /home/jowlo/projects/kicad/kicad-ESP8266/ESP8266.pretty)(options "")(descr ""))
+  (lib (name tmp)(type KiCad)(uri /tmp)(options "")(descr ""))
+  (lib (name dips-s)(type Legacy)(uri /home/jowlo/projects/kicad/dips-s.mod)(options "")(descr ""))
+)

@@ -1,0 +1,267 @@
+(pcb "/home/jowlo/projects/esp8266-leds/pcb/pwm_board.dsn"
+  (parser
+    (string_quote ")
+    (space_in_quoted_tokens on)
+    (host_cad "KiCad's Pcbnew")
+    (host_version "4.0.1-stable")
+  )
+  (resolution um 10)
+  (unit um)
+  (structure
+    (layer F.Cu
+      (type signal)
+      (property
+        (index 0)
+      )
+    )
+    (layer B.Cu
+      (type signal)
+      (property
+        (index 1)
+      )
+    )
+    (boundary
+      (path pcb 0  193040 -86360  116840 -86360  116840 -124460  193040 -124460
+            193040 -86360  193040 -86360)
+    )
+    (plane Earth (polygon B.Cu 0  119380 -88900  190500 -88900  190500 -121920  119380 -121920))
+    (via "Via[0-1]_600:400_um")
+    (rule
+      (width 500)
+      (clearance 200.1)
+      (clearance 200.1 (type default_smd))
+      (clearance 50 (type smd_smd))
+    )
+  )
+  (placement
+    (component Connect:JACK_ALIM
+      (place CON1 175895 -91440 front 270 (PN BARREL_JACK))
+    )
+    (component Connect:USB_B
+      (place P1 128270 -105410 front 180 (PN USB_B))
+    )
+    (component Resistors_ThroughHole:Resistor_Horizontal_RM10mm
+      (place R1 128905 -92710 front 0 (PN 10k))
+      (place R2 143510 -92710 front 0 (PN 10k))
+      (place R3 158750 -92710 front 0 (PN 10k))
+    )
+    (component "Terminal_Blocks:TerminalBlock_Pheonix_MPT-2.54mm_2pol"
+      (place P3 183515 -117475 front 0 (PN CONN_01X02))
+    )
+    (component "TO_SOT_Packages_THT:TO-220_Neutral123_Horizontal"
+      (place VT1 139700 -101600 front 180 (PN IRLZ44))
+      (place VT2 153670 -101600 front 180 (PN IRLZ44))
+      (place VT3 167640 -101600 front 180 (PN IRLZ44))
+    )
+    (component "Terminal_Blocks:TerminalBlock_Pheonix_MPT-2.54mm_4pol"
+      (place P2 185420 -100965 front 270 (PN CONN_01X04))
+    )
+  )
+  (library
+    (image Connect:JACK_ALIM
+      (outline (path signal 150  -7112 4318  -7874 4318))
+      (outline (path signal 150  -7874 4318  -7874 -4318))
+      (outline (path signal 150  -7874 -4318  -7112 -4318))
+      (outline (path signal 150  -4064 4318  -4064 -4318))
+      (outline (path signal 150  5588 4318  5588 -4318))
+      (outline (path signal 150  -7112 -4318  5588 -4318))
+      (outline (path signal 150  -7112 4318  5588 4318))
+      (pin Round[A]Pad_4800.6_um 2 0 0)
+      (pin Rect[A]Pad_4800.6x4800.6_um 1 6096 0)
+      (pin Round[A]Pad_4800.6_um 3 2286 -5080)
+    )
+    (image Connect:USB_B
+      (outline (path signal 50  15250 -8900  -2300 -8900))
+      (outline (path signal 50  -2300 -8900  -2300 6350))
+      (outline (path signal 50  -2300 6350  15250 6350))
+      (outline (path signal 50  15250 6350  15250 -8900))
+      (outline (path signal 150  6350 -7366  14986 -7366))
+      (outline (path signal 150  -2032 -7366  3048 -7366))
+      (outline (path signal 150  6350 4826  14986 4826))
+      (outline (path signal 150  -2032 4826  3048 4826))
+      (outline (path signal 150  14986 4826  14986 -7366))
+      (outline (path signal 150  -2032 -7366  -2032 4826))
+      (pin Round[A]Pad_1524_um (rotate 270) 2 0 -2540)
+      (pin Round[A]Pad_1524_um (rotate 270) 1 0 0)
+      (pin Round[A]Pad_1524_um (rotate 270) 4 1998.98 0)
+      (pin Round[A]Pad_1524_um (rotate 270) 3 1998.98 -2540)
+      (pin Round[A]Pad_2700.02_um (rotate 270) 5 4699 -7269.48)
+      (pin Round[A]Pad_2700.02_um (rotate 270) 5@1 4699 4729.48)
+    )
+    (image Resistors_ThroughHole:Resistor_Horizontal_RM10mm
+      (outline (path signal 150  -2540 1270  2540 1270))
+      (outline (path signal 150  2540 1270  2540 -1270))
+      (outline (path signal 150  2540 -1270  -2540 -1270))
+      (outline (path signal 150  -2540 -1270  -2540 1270))
+      (outline (path signal 150  -2540 0  -3810 0))
+      (outline (path signal 150  2540 0  3810 0))
+      (pin Round[A]Pad_1998.98_um 1 -5080 0)
+      (pin Round[A]Pad_1998.98_um 2 5080 0)
+    )
+    (image "Terminal_Blocks:TerminalBlock_Pheonix_MPT-2.54mm_2pol"
+      (outline (path signal 50  -1700 3300  4300 3300))
+      (outline (path signal 50  -1700 -3300  -1700 3300))
+      (outline (path signal 50  4300 -3300  -1700 -3300))
+      (outline (path signal 50  4300 3300  4300 -3300))
+      (outline (path signal 150  4069.08 -2600.96  -1529.08 -2600.96))
+      (outline (path signal 150  -1330.96 -3098.8  -1330.96 -2600.96))
+      (outline (path signal 150  3870.96 -2600.96  3870.96 -3098.8))
+      (outline (path signal 150  1270 -3098.8  1270 -2600.96))
+      (outline (path signal 150  -1529.08 2700.02  4069.08 2700.02))
+      (outline (path signal 150  -1529.08 -3098.8  4069.08 -3098.8))
+      (outline (path signal 150  4069.08 -3098.8  4069.08 3098.8))
+      (outline (path signal 150  4069.08 3098.8  -1529.08 3098.8))
+      (outline (path signal 150  -1529.08 3098.8  -1529.08 -3098.8))
+      (pin Oval[A]Pad_1998.98x1998.98_um 2 2540 0)
+      (pin Rect[A]Pad_1998.98x1998.98_um 1 0 0)
+    )
+    (image "TO_SOT_Packages_THT:TO-220_Neutral123_Horizontal"
+      (outline (path signal 150  2514.47 16764  2391.41 15987  2034.25 15286  1477.97 14729.8
+            777.014 14372.6  0 14249.5  -777.014 14372.6  -1477.97 14729.8
+            -2034.25 15286  -2391.41 15987  -2514.47 16764  -2391.41 17541
+            -2034.25 18242  -1477.97 18798.2  -777.014 19155.4  0 19278.5
+            777.014 19155.4  1477.97 18798.2  2034.25 18242  2391.41 17541))
+      (outline (path signal 150  -2540 3683  -2540 1905))
+      (outline (path signal 150  0 3683  0 1905))
+      (outline (path signal 150  2540 3683  2540 1905))
+      (outline (path signal 150  5334 12192  5334 20193))
+      (outline (path signal 150  5334 20193  -5334 20193))
+      (outline (path signal 150  -5334 20193  -5334 12192))
+      (outline (path signal 150  5334 3683  5334 12192))
+      (outline (path signal 150  5334 12192  -5334 12192))
+      (outline (path signal 150  -5334 12192  -5334 3683))
+      (outline (path signal 150  0 3683  -5334 3683))
+      (outline (path signal 150  0 3683  5334 3683))
+      (pin Oval[A]Pad_2499.36x1501.14_um (rotate 90) 2 0 0)
+      (pin Oval[A]Pad_2499.36x1501.14_um (rotate 90) 1 -2540 0)
+      (pin Oval[A]Pad_2499.36x1501.14_um (rotate 90) 3 2540 0)
+      (keepout "" (circle F.Cu 3799.84 0 16764))
+      (keepout "" (circle B.Cu 3799.84 0 16764))
+    )
+    (image "Terminal_Blocks:TerminalBlock_Pheonix_MPT-2.54mm_4pol"
+      (outline (path signal 50  -1778 3302  9398 3302))
+      (outline (path signal 50  -1778 -3302  -1778 3302))
+      (outline (path signal 50  9398 -3302  -1778 -3302))
+      (outline (path signal 50  9398 3302  9398 -3302))
+      (outline (path signal 150  9110.98 3098.8  -1490.98 3098.8))
+      (outline (path signal 150  -1490.98 2700.02  9110.98 2700.02))
+      (outline (path signal 150  -1490.98 -2600.96  9110.98 -2600.96))
+      (outline (path signal 150  9110.98 -3098.8  -1490.98 -3098.8))
+      (outline (path signal 150  6306.82 -2600.96  6306.82 -3098.8))
+      (outline (path signal 150  3810 -2600.96  3810 -3098.8))
+      (outline (path signal 150  -1287.78 -3098.8  -1287.78 -2600.96))
+      (outline (path signal 150  8910.32 -2600.96  8910.32 -3098.8))
+      (outline (path signal 150  1313.18 -3098.8  1313.18 -2600.96))
+      (outline (path signal 150  9108.44 -3098.8  9108.44 3098.8))
+      (outline (path signal 150  -1485.9 3098.8  -1485.9 -3098.8))
+      (pin Oval[A]Pad_1998.98x1998.98_um (rotate 180) 4 7620 0)
+      (pin Rect[A]Pad_1998.98x1998.98_um (rotate 180) 1 0 0)
+      (pin Oval[A]Pad_1998.98x1998.98_um (rotate 180) 2 2540 0)
+      (pin Oval[A]Pad_1998.98x1998.98_um (rotate 180) 3 5080 0)
+    )
+    (padstack Round[A]Pad_1524_um
+      (shape (circle F.Cu 1524))
+      (shape (circle B.Cu 1524))
+      (attach off)
+    )
+    (padstack Round[A]Pad_1998.98_um
+      (shape (circle F.Cu 1998.98))
+      (shape (circle B.Cu 1998.98))
+      (attach off)
+    )
+    (padstack Round[A]Pad_2700.02_um
+      (shape (circle F.Cu 2700.02))
+      (shape (circle B.Cu 2700.02))
+      (attach off)
+    )
+    (padstack Round[A]Pad_4800.6_um
+      (shape (circle F.Cu 4800.6))
+      (shape (circle B.Cu 4800.6))
+      (attach off)
+    )
+    (padstack Oval[A]Pad_2499.36x1501.14_um
+      (shape (path F.Cu 1501.14  -499.11 0  499.11 0))
+      (shape (path B.Cu 1501.14  -499.11 0  499.11 0))
+      (attach off)
+    )
+    (padstack Oval[A]Pad_1998.98x1998.98_um
+      (shape (path F.Cu 1998.98  0 0  0 0))
+      (shape (path B.Cu 1998.98  0 0  0 0))
+      (attach off)
+    )
+    (padstack Rect[A]Pad_4800.6x4800.6_um
+      (shape (rect F.Cu -2400.3 -2400.3 2400.3 2400.3))
+      (shape (rect B.Cu -2400.3 -2400.3 2400.3 2400.3))
+      (attach off)
+    )
+    (padstack Rect[A]Pad_1998.98x1998.98_um
+      (shape (rect F.Cu -999.49 -999.49 999.49 999.49))
+      (shape (rect B.Cu -999.49 -999.49 999.49 999.49))
+      (attach off)
+    )
+    (padstack "Via[0-1]_600:400_um"
+      (shape (circle F.Cu 600))
+      (shape (circle B.Cu 600))
+      (attach off)
+    )
+  )
+  (network
+    (net Earth
+      (pins CON1-2 CON1-3 P1-4 P1-5 P1-5@1 R1-1 R2-1 R3-1 P3-1 VT1-3 VT2-3 VT3-3)
+    )
+    (net "Net-(CON1-Pad1)"
+      (pins CON1-1 P3-2 P2-1)
+    )
+    (net "Net-(P1-Pad2)"
+      (pins P1-2 R2-2 VT2-1)
+    )
+    (net "Net-(P1-Pad1)"
+      (pins P1-1 R1-2 VT1-1)
+    )
+    (net "Net-(P1-Pad3)"
+      (pins P1-3 R3-2 VT3-1)
+    )
+    (net "Net-(P2-Pad2)"
+      (pins VT1-2 P2-2)
+    )
+    (net "Net-(P2-Pad3)"
+      (pins VT2-2 P2-3)
+    )
+    (net "Net-(P2-Pad4)"
+      (pins VT3-2 P2-4)
+    )
+    (class kicad_default "" Earth "Net-(P1-Pad1)" "Net-(P1-Pad2)" "Net-(P1-Pad3)"
+      (circuit
+        (use_via Via[0-1]_600:400_um)
+      )
+      (rule
+        (width 500)
+        (clearance 200.1)
+      )
+    )
+    (class 12V "Net-(CON1-Pad1)" "Net-(P2-Pad2)" "Net-(P2-Pad3)" "Net-(P2-Pad4)"
+      (circuit
+        (use_via Via[0-1]_600:400_um)
+      )
+      (rule
+        (width 1200)
+        (clearance 1000.1)
+      )
+    )
+  )
+  (wiring
+    (wire (path F.Cu 500  128270 -102870  132080 -99060)(net "Net-(P1-Pad2)")(type protect))
+    (wire (path F.Cu 500  156210 -99060  156210 -101600)(net "Net-(P1-Pad2)")(type protect))
+    (wire (path F.Cu 500  132080 -99060  156210 -99060)(net "Net-(P1-Pad2)")(type protect))
+    (wire (path B.Cu 500  156210 -101600  156210 -99060)(net "Net-(P1-Pad2)")(type protect))
+    (wire (path B.Cu 500  149860 -92710  148590 -92710)(net "Net-(P1-Pad2)")(type protect))
+    (wire (path B.Cu 500  156210 -99060  149860 -92710)(net "Net-(P1-Pad2)")(type protect))
+    (wire (path F.Cu 500  128270 -105410  140970 -105410)(net "Net-(P1-Pad1)")(type protect))
+    (wire (path F.Cu 500  142240 -104140  142240 -101600)(net "Net-(P1-Pad1)")(type protect))
+    (wire (path F.Cu 500  140970 -105410  142240 -104140)(net "Net-(P1-Pad1)")(type protect))
+    (wire (path B.Cu 500  142240 -101600  142240 -99060  133985 -92710)(net "Net-(P1-Pad1)")(type protect))
+    (wire (path F.Cu 500  126271 -102870  126365 -102870  131445 -97790  168910 -97790
+            170180 -99060  170180 -101600)(net "Net-(P1-Pad3)")(type protect))
+    (wire (path B.Cu 500  170180 -101600  170180 -99060  163830 -92710)(net "Net-(P1-Pad3)")(type protect))
+  )
+)

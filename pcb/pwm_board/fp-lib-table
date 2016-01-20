@@ -1,0 +1,3 @@
+(fp_lib_table
+  (lib (name solder-pad)(type KiCad)(uri "$(KIPRJMOD)/solder-pad.pretty")(options "")(descr ""))
+)

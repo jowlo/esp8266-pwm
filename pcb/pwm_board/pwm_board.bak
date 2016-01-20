@@ -1,0 +1,327 @@
+EESchema Schematic File Version 2
+LIBS:power
+LIBS:device
+LIBS:transistors
+LIBS:conn
+LIBS:linear
+LIBS:regul
+LIBS:74xx
+LIBS:cmos4000
+LIBS:adc-dac
+LIBS:memory
+LIBS:xilinx
+LIBS:microcontrollers
+LIBS:dsp
+LIBS:microchip
+LIBS:analog_switches
+LIBS:motorola
+LIBS:texas
+LIBS:intel
+LIBS:audio
+LIBS:interface
+LIBS:digital-audio
+LIBS:philips
+LIBS:display
+LIBS:cypress
+LIBS:siliconi
+LIBS:opto
+LIBS:atmel
+LIBS:contrib
+LIBS:valves
+LIBS:LFtransistor
+LIBS:dp_devices
+LIBS:pwm_board-cache
+EELAYER 25 0
+EELAYER END
+$Descr A4 11693 8268
+encoding utf-8
+Sheet 1 1
+Title ""
+Date ""
+Rev ""
+Comp ""
+Comment1 ""
+Comment2 ""
+Comment3 ""
+Comment4 ""
+$EndDescr
+$Comp
+L IRLZ44 VT1
+U 1 1 569BE7A7
+P 3100 3000
+F 0 "VT1" H 3250 3450 71  0000 C CNN
+F 1 "IRLZ44" H 3250 3350 71  0000 C CNN
+F 2 "TO_SOT_Packages_THT:TO-220_Neutral123_Vertical" H 3100 3000 60  0001 C CNN
+F 3 "" H 3100 3000 60  0000 C CNN
+	1    3100 3000
+	1    0    0    -1  
+$EndComp
+$Comp
+L IRLZ44 VT2
+U 1 1 569BE810
+P 4100 3000
+F 0 "VT2" H 4250 3450 71  0000 C CNN
+F 1 "IRLZ44" H 4250 3350 71  0000 C CNN
+F 2 "TO_SOT_Packages_THT:TO-220_Neutral123_Vertical" H 4100 3000 60  0001 C CNN
+F 3 "" H 4100 3000 60  0000 C CNN
+	1    4100 3000
+	1    0    0    -1  
+$EndComp
+$Comp
+L IRLZ44 VT3
+U 1 1 569BE85F
+P 5100 3000
+F 0 "VT3" H 5250 3450 71  0000 C CNN
+F 1 "IRLZ44" H 5250 3350 71  0000 C CNN
+F 2 "TO_SOT_Packages_THT:TO-220_Neutral123_Vertical" H 5100 3000 60  0001 C CNN
+F 3 "" H 5100 3000 60  0000 C CNN
+	1    5100 3000
+	1    0    0    -1  
+$EndComp
+$Comp
+L Earth #PWR01
+U 1 1 569BE971
+P 3550 3250
+F 0 "#PWR01" H 3550 3000 50  0001 C CNN
+F 1 "Earth" H 3550 3100 50  0001 C CNN
+F 2 "" H 3550 3250 50  0000 C CNN
+F 3 "" H 3550 3250 50  0000 C CNN
+	1    3550 3250
+	1    0    0    -1  
+$EndComp
+$Comp
+L USB_B P1
+U 1 1 569BE98E
+P 2050 2250
+F 0 "P1" H 2250 2050 50  0000 C CNN
+F 1 "USB_B" H 2000 2450 50  0000 C CNN
+F 2 "Connect:USB_B" V 2000 2150 50  0001 C CNN
+F 3 "" V 2000 2150 50  0000 C CNN
+	1    2050 2250
+	0    -1   -1   0   
+$EndComp
+$Comp
+L R R1
+U 1 1 569BEBE4
+P 3000 3150
+F 0 "R1" V 3080 3150 50  0000 C CNN
+F 1 "10k" V 3000 3150 50  0000 C CNN
+F 2 "Resistors_ThroughHole:Resistor_Horizontal_RM10mm" V 2930 3150 50  0001 C CNN
+F 3 "" H 3000 3150 50  0000 C CNN
+	1    3000 3150
+	-1   0    0    1   
+$EndComp
+$Comp
+L R R2
+U 1 1 569BEE20
+P 4000 3150
+F 0 "R2" V 4080 3150 50  0000 C CNN
+F 1 "10k" V 4000 3150 50  0000 C CNN
+F 2 "Resistors_ThroughHole:Resistor_Horizontal_RM10mm" V 3930 3150 50  0001 C CNN
+F 3 "" H 4000 3150 50  0000 C CNN
+	1    4000 3150
+	-1   0    0    1   
+$EndComp
+$Comp
+L R R3
+U 1 1 569BEE72
+P 5000 3150
+F 0 "R3" V 5080 3150 50  0000 C CNN
+F 1 "10k" V 5000 3150 50  0000 C CNN
+F 2 "Resistors_ThroughHole:Resistor_Horizontal_RM10mm" V 4930 3150 50  0001 C CNN
+F 3 "" H 5000 3150 50  0000 C CNN
+	1    5000 3150
+	-1   0    0    1   
+$EndComp
+$Comp
+L Earth #PWR02
+U 1 1 569BF1E1
+P 4550 3250
+F 0 "#PWR02" H 4550 3000 50  0001 C CNN
+F 1 "Earth" H 4550 3100 50  0001 C CNN
+F 2 "" H 4550 3250 50  0000 C CNN
+F 3 "" H 4550 3250 50  0000 C CNN
+	1    4550 3250
+	1    0    0    -1  
+$EndComp
+$Comp
+L Earth #PWR03
+U 1 1 569BF201
+P 5550 3250
+F 0 "#PWR03" H 5550 3000 50  0001 C CNN
+F 1 "Earth" H 5550 3100 50  0001 C CNN
+F 2 "" H 5550 3250 50  0000 C CNN
+F 3 "" H 5550 3250 50  0000 C CNN
+	1    5550 3250
+	1    0    0    -1  
+$EndComp
+$Comp
+L Earth #PWR04
+U 1 1 569BF459
+P 3000 3300
+F 0 "#PWR04" H 3000 3050 50  0001 C CNN
+F 1 "Earth" H 3000 3150 50  0001 C CNN
+F 2 "" H 3000 3300 50  0000 C CNN
+F 3 "" H 3000 3300 50  0000 C CNN
+	1    3000 3300
+	1    0    0    -1  
+$EndComp
+$Comp
+L Earth #PWR05
+U 1 1 569BF479
+P 4000 3300
+F 0 "#PWR05" H 4000 3050 50  0001 C CNN
+F 1 "Earth" H 4000 3150 50  0001 C CNN
+F 2 "" H 4000 3300 50  0000 C CNN
+F 3 "" H 4000 3300 50  0000 C CNN
+	1    4000 3300
+	1    0    0    -1  
+$EndComp
+$Comp
+L Earth #PWR06
+U 1 1 569BF499
+P 5000 3300
+F 0 "#PWR06" H 5000 3050 50  0001 C CNN
+F 1 "Earth" H 5000 3150 50  0001 C CNN
+F 2 "" H 5000 3300 50  0000 C CNN
+F 3 "" H 5000 3300 50  0000 C CNN
+	1    5000 3300
+	1    0    0    -1  
+$EndComp
+$Comp
+L CONN_01X04 P2
+U 1 1 569BF4B4
+P 6650 2250
+F 0 "P2" H 6650 2500 50  0000 C CNN
+F 1 "CONN_01X04" V 6750 2250 50  0000 C CNN
+F 2 "Socket_Strips:Socket_Strip_Angled_1x04" H 6650 2250 50  0001 C CNN
+F 3 "" H 6650 2250 50  0000 C CNN
+	1    6650 2250
+	1    0    0    1   
+$EndComp
+$Comp
+L Earth #PWR07
+U 1 1 569BF580
+P 2300 1900
+F 0 "#PWR07" H 2300 1650 50  0001 C CNN
+F 1 "Earth" H 2300 1750 50  0001 C CNN
+F 2 "" H 2300 1900 50  0000 C CNN
+F 3 "" H 2300 1900 50  0000 C CNN
+	1    2300 1900
+	-1   0    0    1   
+$EndComp
+$Comp
+L BARREL_JACK CON1
+U 1 1 569BFB48
+P 5850 1300
+F 0 "CON1" H 5850 1550 50  0000 C CNN
+F 1 "BARREL_JACK" H 5850 1100 50  0000 C CNN
+F 2 "Connect:JACK_ALIM" H 5850 1300 50  0001 C CNN
+F 3 "" H 5850 1300 50  0000 C CNN
+	1    5850 1300
+	0    1    1    0   
+$EndComp
+$Comp
+L Earth #PWR08
+U 1 1 569BFE90
+P 5750 1800
+F 0 "#PWR08" H 5750 1550 50  0001 C CNN
+F 1 "Earth" H 5750 1650 50  0001 C CNN
+F 2 "" H 5750 1800 50  0000 C CNN
+F 3 "" H 5750 1800 50  0000 C CNN
+	1    5750 1800
+	1    0    0    -1  
+$EndComp
+$Comp
+L CONN_01X02 P3
+U 1 1 569C18CF
+P 6550 1350
+F 0 "P3" H 6550 1500 50  0000 C CNN
+F 1 "CONN_01X02" V 6650 1350 50  0000 C CNN
+F 2 "Terminal_Blocks:TerminalBlock_WAGO-804_RM5mm_2pol" H 6550 1350 50  0001 C CNN
+F 3 "" H 6550 1350 50  0000 C CNN
+	1    6550 1350
+	0    -1   -1   0   
+$EndComp
+$Comp
+L Earth #PWR09
+U 1 1 569C1957
+P 6500 1550
+F 0 "#PWR09" H 6500 1300 50  0001 C CNN
+F 1 "Earth" H 6500 1400 50  0001 C CNN
+F 2 "" H 6500 1550 50  0000 C CNN
+F 3 "" H 6500 1550 50  0000 C CNN
+	1    6500 1550
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	2350 2450 2700 2450
+Wire Wire Line
+	2700 2450 2700 3000
+Wire Wire Line
+	2700 3000 3100 3000
+Connection ~ 3000 3000
+Wire Wire Line
+	2350 2350 3800 2350
+Wire Wire Line
+	3800 2350 3800 3000
+Wire Wire Line
+	3800 3000 4100 3000
+Connection ~ 4000 3000
+Wire Wire Line
+	2350 2250 4800 2250
+Wire Wire Line
+	4800 2250 4800 3000
+Wire Wire Line
+	4800 3000 5100 3000
+Connection ~ 5000 3000
+Wire Wire Line
+	1950 1950 2350 1950
+Wire Wire Line
+	2300 1950 2300 1900
+Wire Wire Line
+	2350 1950 2350 2150
+Connection ~ 2300 1950
+Wire Wire Line
+	6150 1750 6150 2100
+Wire Wire Line
+	6150 2100 6450 2100
+Wire Wire Line
+	5550 2550 5550 2400
+Wire Wire Line
+	4550 2300 4550 2550
+Wire Wire Line
+	4550 2300 6450 2300
+Wire Wire Line
+	3550 2550 3550 2200
+Wire Wire Line
+	3550 2200 6200 2200
+Wire Wire Line
+	5750 1600 5750 1800
+Wire Wire Line
+	5850 1600 5850 1750
+Wire Wire Line
+	5850 1750 5750 1750
+Connection ~ 5750 1750
+Wire Wire Line
+	5950 1600 5950 1750
+Wire Wire Line
+	5950 1750 6600 1750
+Wire Wire Line
+	6600 1750 6600 1550
+Connection ~ 6150 1750
+Wire Wire Line
+	5550 2400 6250 2400
+Wire Wire Line
+	6250 2400 6250 2200
+Wire Wire Line
+	6250 2200 6450 2200
+Wire Wire Line
+	6200 2200 6200 2450
+Wire Wire Line
+	6200 2450 6350 2450
+Wire Wire Line
+	6350 2450 6350 2400
+Wire Wire Line
+	6350 2400 6450 2400
+$EndSCHEMATC
