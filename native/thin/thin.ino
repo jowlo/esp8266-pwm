@@ -40,10 +40,18 @@ unsigned int localPort = 5555;      // local port to listen for UDP packets
 byte buf[512]; //buffer to hold incoming packets
 
 
-int pca_count = 0;
-int *pin_values = 0;
-int *pca_address = 0;
-PCA9685 *pca = 0;
+int pca_count;
+int* pin_values;
+int* pca_address;
+//PCA9685* pca;
+
+PCA9685 pca[] = {
+  PCA9685(0x40, PCA9685_MODE_N_DRIVER, 800),
+  PCA9685(0x41, PCA9685_MODE_N_DRIVER, 800),
+  PCA9685(0x42, PCA9685_MODE_N_DRIVER, 800),
+  PCA9685(0x43, PCA9685_MODE_N_DRIVER, 800),
+  PCA9685(0x44, PCA9685_MODE_N_DRIVER, 800)
+};
 
 int pwm_max = PCA9685_MAX_VALUE;
 int pwm_min = 0;
@@ -62,27 +70,16 @@ void setup()
 
   // Scan I2C-Bus
   pca_count = scan_i2c();
+  //pca_count = 2;
 
   // Initialize PWM value buffer
-  if (pin_values != 0) {
-    delete[] pin_values;
-  }
-  if(pca != 0){
-    delete[] pca;
-  }
-  if(pca_address != 0){
-    delete[] pca_address;
-  }
-  pca_address = new int[pca_count];
-  pca = new PCA9685[pca_count];
-  pin_values = new int[15 * pca_count];
-
-  scan_i2c();
+  
+  pin_values = (int*) malloc(pca_count * 15 * sizeof(int));  
 
   // set up pca pwm boards
   for(int i = 0; i < pca_count; i++){
-    Serial << "Board (" << pca_address[i] << ") set up." << "\n";
-    pca[i] = PCA9685(pca_address[i], PCA9685_MODE_N_DRIVER, 800);
+    Serial << "Board #" << i+1 << "set up.\n";
+    //pca[i] = PCA9685(pca_address[i], PCA9685_MODE_N_DRIVER, 800);
     pca[i].setup();
   }
 
@@ -172,7 +169,7 @@ void parse_pwm(byte* buf, int start, int total){
   for(byte i = 0; i < pca_count*15; i++){
       pin_values[i] = min(pwm_max, read2b(buf, start+(2*i)));
       
-    Serial << "Setting Board #" << i/15 << " Pin #" << i%15 << " to " << pin_values[i] << "\n";
+    //Serial << "Setting Board #" << i/15 << " Pin #" << i%15 << " to " << pin_values[i] << "\n";
     pca[i/15].getPin(i%15).setValue(pin_values[i]);
     
     //analogWrite(pins[i], );
@@ -222,13 +219,11 @@ int scan_i2c() {
     error = Wire.endTransmission();
     if (error == 0 && address != 112) // filter pca-broadcast
     {
-      if(pca_address != 0){
-        pca_address[nDevices] = address;
-      }
       Serial << "I2C device found at address 0x";
       if (address<16) 
         Serial << "0";
       Serial.print(address,HEX);
+      Serial << "\n";
       nDevices++;
     }
     else if (error==4) 
