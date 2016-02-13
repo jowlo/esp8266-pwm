@@ -36,8 +36,8 @@ class Net:
 
     def rgb_to_pwm(self, color):
         """Translate RGB-Color to PWM values including color and gamma correction."""
-        c = [color[1], color[0], color[2]]
-        cor = [self.color_correction[1], self.color_correction[0], self.color_correction[2]]
+        c = [color[2], color[0], color[1]]
+        cor = [self.color_correction[2], self.color_correction[0], self.color_correction[1]]
         return [int(self.gamma_correction(a * b * self.pwm_resolution)) for a, b in zip(c, cor)]
 
     def send(self, state):
