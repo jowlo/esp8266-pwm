@@ -24,14 +24,15 @@ class FFT:
         self.noise = []
         self.run_thread = False
         self.window = np.blackman(self.buffersize)
+        self.fourier = []
 
     def calculate_levels(self, data, chunk, sample_rate, remove_noise=False):
         # Apply FFT - real data so rfft used
-        fourier = np.fft.rfft(np.multiply(data, self.window))
+        self.fourier = np.fft.rfft(np.multiply(data, self.window))
         # Remove last element in array to make it the same size as chunk
-        fourier = np.delete(fourier, len(fourier) - 1)
+        self.fourier = np.delete(self.fourier, len(self.fourier) - 1)
         # Find amplitude
-        power = np.log10(np.abs(fourier)) ** 2
+        power = np.log10(np.abs(self.fourier)) ** 2
         power2 = power[:]
         # Araange array into 8 rows for the 8 bars on LED matrix
         # power = np.reshape(power, (8, self.buffersize/ 16))
@@ -90,11 +91,11 @@ class FFT:
         # intensity = [a/(b/100) for a,b in zip(power, self.power_max)]
         #
         # Min and Max scaling:
-        intensity = (max_val * (power - self.power_min)) // (self.power_max - self.power_min);
+        intensity = [((max_val * (power[i] - self.power_min[i])) // (self.power_max[i] - self.power_min[i])) for i in range(len(power))]
 
         return intensity
 
-    def reset_scale(self):
+    def rescale(self):
         self.power_max = []
         self.power_min = []
 

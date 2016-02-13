@@ -174,6 +174,7 @@ void btn_glow_clicked(GtkButton *button, gpointer user_data){
 	if(pthread_create(&worker, NULL, glow, &glowin)) {
 		g_print(stderr, "Error creating thread\n");
 	}  
+
 }
 
 

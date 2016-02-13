@@ -73,13 +73,14 @@ void send_color(u_int *color, u_int alpha) {
   color_byte_to_pwm(color, out);
   brightness(alpha, out);
 
+  // strips are *GRB*
   packet[0] = 0;
   packet[1] = 0x7e; // pwm command
-  packet[2+ 0] = (out[0] >> 8) & 0xff;
-  packet[2+ 1] = out[0] & 0xff;
+  packet[2+ 0] = (out[1] >> 8) & 0xff;
+  packet[2+ 1] = out[1] & 0xff;
 
-  packet[2+ 2] = (out[1] >> 8) & 0xff;
-  packet[2+ 3] = out[1] & 0xff;
+  packet[2+ 2] = (out[0] >> 8) & 0xff;
+  packet[2+ 3] = out[0] & 0xff;
 
   packet[2+ 4] = (out[2] >> 8) & 0xff;
   packet[2+ 5] = out[2] & 0xff;
@@ -115,13 +116,14 @@ void send_state(ledstate state){
   for(int i = 0; i < STRIPS; i++){
     rgba_to_pwm(&state.rgba[i], color);
 
-    //red
-    packet[2+ (6*i) + 0] = (color[0] >> 8) & 0xff;
-    packet[2+ (6*i) + 1] =  color[0] & 0xff;
-    //green
-    packet[2+ (6*i) + 2] = (color[1] >> 8) & 0xff;
-    packet[2+ (6*i) + 3] =  color[1] & 0xff;
-    //blue
+    // strips are *GRB*
+    // green
+    packet[2+ (6*i) + 0] = (color[1] >> 8) & 0xff;
+    packet[2+ (6*i) + 1] =  color[1] & 0xff;
+    // red
+    packet[2+ (6*i) + 2] = (color[0] >> 8) & 0xff;
+    packet[2+ (6*i) + 3] =  color[0] & 0xff;
+    // blue
     packet[2+ (6*i) + 4] = (color[2] >> 8) & 0xff;
     packet[2+ (6*i) + 5] =  color[2] & 0xff;
 
