@@ -2,8 +2,9 @@ include <lasercut/lasercut.scad>;
 include <2d_m3-nutlock.scad>; 
 
 thickness = 4;
+pcb = 1.6;
 x = 100;
-y = 70 + 2*1.8;
+y = 70 + 2*pcb;
 z = 70; 
 
 
@@ -24,7 +25,7 @@ usb_numx = 5;
 usb_numy = 2;
 
 usb_cutouts = [ for (x = [0:usb_numx-1]) for (y = [0:usb_numy-1])
-    [screw_offset_x+usb_screw_offset_x + x*15.24, (10+1.8) + y*(30 + 1.8) , 12.6, 11.3] ];
+    [screw_offset_x+usb_screw_offset_x + x*15.24, (10+pcb) + y*(30 +pcb) , 12.6, 11.3] ];
 
 
 
@@ -42,7 +43,7 @@ module front() {
         );
     }
 }
-color("Red",0.75)
+color("Orange",0.75)
     front();
 
 module back() {
@@ -59,11 +60,12 @@ translate([0,0,-z - thickness]){
                 [3, x/6, y-y/4], // antenna
                 [4, x/6, y/4] // power
             ]
+            //,cutouts = [[(x-(2.54*8))/2, 10, 2.54*8, 2.54*2]]
         );
     }
 }
 }
-color("Red",0.75)
+color("Cyan",0.75)
     back();
 
 
@@ -108,11 +110,13 @@ translate([-thickness,0,0])
     rotate([0,90,0]) 
     lasercutoutSquare(thickness=thickness, x=z, y=y,
         finger_joints=[
-                [UP, 1, 4],
-                [DOWN, 0, 4],
                 [LEFT, 0, 4],
                 [RIGHT, 1, 4]
-            ]
+            ],
+        bumpy_finger_joints=[
+                [UP, 1, 4],
+                [DOWN, 0, 4]
+        ]
     );
     
 color("Gold",0.75)
@@ -121,11 +125,13 @@ translate([x,0,0])
     rotate([0,90,0]) 
     lasercutoutSquare(thickness=thickness, x=z, y=y,
         finger_joints=[
-                [UP, 1, 4],
-                [DOWN, 0, 4],
                 [LEFT, 0, 4],
                 [RIGHT, 1, 4]
-            ]
+            ],
+        bumpy_finger_joints=[
+                [UP, 1, 4],
+                [DOWN, 0, 4],        
+            ]        
     );
 
 color("Blue", 0.75)
