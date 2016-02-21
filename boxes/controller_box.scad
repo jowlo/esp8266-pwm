@@ -8,7 +8,7 @@ z = 70;
 
 screw_dist_x = 83.185;
 screw_offset_x = (x - screw_dist_x)/2;
-screw_offset_y = 3.886 - (3.823 - 3); // dist(hole, board_edge) - (dist(board_edge, usb_edge) - thickness)
+screw_offset_y = 3.886 + 0.5;// - (3.823 - 3); // dist(hole, board_edge) - (dist(board_edge, usb_edge) - thickness)
 screw_dist_y = 41.597;
 screw_holes = [
                 [1.5, screw_offset_x, screw_offset_y],
@@ -23,7 +23,7 @@ usb_numx = 5;
 usb_numy = 2;
 
 usb_cutouts = [ for (x = [0:usb_numx-1]) for (y = [0:usb_numy-1])
-    [screw_offset_x+usb_screw_offset_x + x*15.24, (10+1.8) + y*(30 + 1.8) , 12.192, 11] ];
+    [screw_offset_x+usb_screw_offset_x + x*15.24, (10+1.8) + y*(30 + 1.8) , 12.6, 11.3] ];
 
 
 color("Gold",0.75)
@@ -48,7 +48,8 @@ translate([0,0,-z - thickness])
                 [RIGHT, 0, 4],
             ],
         circles_remove = [
-            [4, x/6, y/4],
+            [3, x/6, y-y/4], // antenna
+            [4, x/6, y/4] // power
         ]
      );
 
