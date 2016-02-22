@@ -29,13 +29,6 @@ module foot(thickness) {
                 circle(r=1.5, $fn=20);
             }
         }
-    translate([0,0,2*thickness])
-        linear_extrude(height = thickness , center = false){
-            difference(){
-                circle(r=3, $fn=60);
-                circle(r=1.5, $fn=20);
-            }
-        }
 }
 
 //foot2d();
