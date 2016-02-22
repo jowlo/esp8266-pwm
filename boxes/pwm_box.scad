@@ -9,6 +9,18 @@ z = 60;
 
 //usb_cutout = [ 12.6, 11.3] ];
 
+heat_cutouts_num = 10;
+heat_cutouts_len = 0.8*y;
+heat_cutouts_offset = 10;
+heat_cutouts_thick = thickness/2;
+heat_cutouts = [for (i = [1:heat_cutouts_num])
+        [(x-heat_cutouts_len)/2, i* (z-heat_cutouts_offset)/heat_cutouts_num, heat_cutouts_len, heat_cutouts_thick]
+    ];
+heat_cutouts_circ = [for (i = [1:heat_cutouts_num]) for (lr = [0:1])
+        [heat_cutouts_thick/2, (x-heat_cutouts_len)/2 + lr*heat_cutouts_len,
+            i*(z-heat_cutouts_offset)/heat_cutouts_num + heat_cutouts_thick/2]
+    ];
+
 screw_dist_x = 22.860;
 screw_offset_x = (x - screw_dist_x)/2;
 screw_offset_y = 4.546 + 0.5;// - (3.823 - 3); // dist(hole, board_edge) - (dist(board_edge, usb_edge) - thickness)
@@ -64,7 +76,9 @@ translate([0,y,0])
                         [DOWN, 1, 4],
                         [LEFT, 0, 4],
                         [RIGHT, 1, 4]
-                    ]
+                    ],
+                cutouts = heat_cutouts,
+                circles_remove = heat_cutouts_circ
             );
         }
 
@@ -85,7 +99,7 @@ translate([0,0-thickness,0])
                 [LEFT, 0, 4],
                 [RIGHT, 1, 4]
             ],
-        circles_remove = screw_holes        
+        circles_remove = screw_holes      
     );
     
 color("Gold",0.75)
