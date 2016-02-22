@@ -13,13 +13,29 @@ heat_cutouts_num = 10;
 heat_cutouts_len = 0.8*y;
 heat_cutouts_offset = 10;
 heat_cutouts_thick = thickness/2;
-heat_cutouts = [for (i = [1:heat_cutouts_num])
-        [(x-heat_cutouts_len)/2, i* (z-heat_cutouts_offset)/heat_cutouts_num, heat_cutouts_len, heat_cutouts_thick]
+heat_cutouts_odd = [for (i = [1:heat_cutouts_num])
+        if (i%2 == 1)
+            [(x-heat_cutouts_len)/2, i* (z-heat_cutouts_offset)/heat_cutouts_num, heat_cutouts_len, heat_cutouts_thick]
     ];
-heat_cutouts_circ = [for (i = [1:heat_cutouts_num]) for (lr = [0:1])
+heat_cutouts_even = [for (i = [1:heat_cutouts_num]) for (lr = [0:1])
+        if (i%2 == 0)
+            [(x-heat_cutouts_len)/2 + lr*(heat_cutouts_len+heat_cutouts_thick)/2 + lr*heat_cutouts_thick/2,
+                i* (z-heat_cutouts_offset)/heat_cutouts_num,
+                ((heat_cutouts_len-2*heat_cutouts_thick))/2,
+                heat_cutouts_thick]
+    ];
+heat_cutouts = concat(heat_cutouts_even, heat_cutouts_odd);
+heat_cutouts_circ_odd = [for (i = [1:heat_cutouts_num]) for (lr = [0:1])
         [heat_cutouts_thick/2, (x-heat_cutouts_len)/2 + lr*heat_cutouts_len,
             i*(z-heat_cutouts_offset)/heat_cutouts_num + heat_cutouts_thick/2]
     ];
+heat_cutouts_circ_even = [for (i = [1:heat_cutouts_num]) for (lr = [0:1])
+        if (i%2 == 0)
+            [heat_cutouts_thick/2, (x-heat_cutouts_len)/2 + lr*(heat_cutouts_len+heat_cutouts_thick)/2 + lr*heat_cutouts_thick/2 + ((lr+1)%2) * ((heat_cutouts_len)/2-(heat_cutouts_thick)),
+                i* (z-heat_cutouts_offset)/heat_cutouts_num + heat_cutouts_thick/2
+            ]
+    ];
+heat_cutouts_circ = concat(heat_cutouts_circ_even, heat_cutouts_circ_odd);
 
 screw_dist_x = 22.860;
 screw_offset_x = (x - screw_dist_x)/2;
