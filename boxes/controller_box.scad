@@ -1,11 +1,11 @@
-include <lasercut/lasercut.scad>; 
+include <lasercut.scad>; 
 include <2d_m3-nutlock.scad>; 
 
-thickness = 4;
+thickness = 3;
 pcb = 1.6;
-x = 100;
+x = 110;
 y = 70 + 2*pcb;
-z = 70; 
+z = 80;
 
 
 screw_dist_x = 83.185;
@@ -28,7 +28,14 @@ usb_cutouts = [ for (x = [0:usb_numx-1]) for (y = [0:usb_numy-1])
     [screw_offset_x+usb_screw_offset_x + x*15.24, (10+pcb) + y*(30 +pcb) , 12.6, 11.3] ];
 
 
-
+flash_cutout_w = 15;
+flash_cutout_h = 4;
+flash_cutout_y = 60+2*pcb;
+flash_cutout_rect = [[(x - flash_cutout_w)/2, flash_cutout_y, flash_cutout_w, flash_cutout_h]];
+flash_cutout_circ = [
+    [flash_cutout_h/2, (x - flash_cutout_w)/2, flash_cutout_y + flash_cutout_h/2],
+    [flash_cutout_h/2, (x - flash_cutout_w)/2 + flash_cutout_w, flash_cutout_y + flash_cutout_h/2]
+];
 
 module front() {
     union() {
@@ -56,10 +63,8 @@ translate([0,0,-z - thickness]){
                     [LEFT, 1, 4],
                     [RIGHT, 0, 4],
                 ],
-            circles_remove = [
-                [3, x/6, y-y/4], // antenna
-                [4, x/6, y/4] // power
-            ]
+            cutouts = flash_cutout_rect,
+            circles_remove = flash_cutout_circ
             //,cutouts = [[(x-(2.54*8))/2, 10, 2.54*8, 2.54*2]]
         );
     }
@@ -116,6 +121,10 @@ translate([-thickness,0,0])
         bumpy_finger_joints=[
                 [UP, 1, 4],
                 [DOWN, 0, 4]
+        ],
+        circles_remove = [
+                [3, z-10, y-y/4], // antenna
+                [4, z-10, y/4] // power
         ]
     );
     
@@ -134,16 +143,3 @@ translate([x,0,0])
             ]        
     );
 
-color("Blue", 0.75)
-rotate([90,0,0]) {
-    translate([screw_offset_x, -screw_offset_y, thickness])
-        foot(thickness);
-    translate([x-screw_offset_x, -screw_offset_y, thickness])
-        foot(thickness);
-    translate([x-screw_offset_x, -screw_offset_y-screw_dist_y, thickness])
-        foot(thickness);
-    translate([screw_offset_x, -screw_offset_y-screw_dist_y, thickness])
-        foot(thickness);
-}
-
-        

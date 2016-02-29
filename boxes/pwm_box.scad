@@ -1,7 +1,7 @@
 include <lasercut/lasercut.scad>; 
 
 
-thickness = 4;
+thickness = 3;
 pcb = 1.6;
 x = 40;
 y = 35;
@@ -64,6 +64,17 @@ module front() {
 color("Orange",0.75)
     front();
 
+
+led_cutout_w = 15;
+led_cutout_h = 4;
+led_cutout_y = thickness+pcb;
+led_cutout_rect = [[(x - led_cutout_w)/2, led_cutout_y, led_cutout_w, led_cutout_h]];
+led_cutout_circ = [
+    [led_cutout_h/2, (x - led_cutout_w)/2, led_cutout_y + led_cutout_h/2],
+    [led_cutout_h/2, (x - led_cutout_w)/2 + led_cutout_w, led_cutout_y + led_cutout_h/2]
+];
+
+
 module back() {
 translate([0,0,-z - thickness]){
     union() {
@@ -73,7 +84,9 @@ translate([0,0,-z - thickness]){
                     [DOWN, 0, 4],
                     [LEFT, 1, 4],
                     [RIGHT, 0, 4],
-                ]
+                ],
+            cutouts = led_cutout_rect,
+            circles_remove = led_cutout_circ
         );
     }
 }
@@ -87,7 +100,7 @@ translate([0,y,0])
     rotate([-90,0,0]) {
         union() {
             lasercutoutSquare(thickness=thickness, x=x, y=z,
-                finger_joints=[
+                bumpy_finger_joints=[
                         [UP, 1, 4],
                         [DOWN, 1, 4],
                         [LEFT, 0, 4],
@@ -109,13 +122,17 @@ color("Green",0.75)
 translate([0,0-thickness,0])
     rotate([-90,0,0]) 
     lasercutoutSquare(thickness=thickness, x=x, y=z,
-        finger_joints=[
+        bumpy_finger_joints=[
                 [UP, 0, 4],
                 [DOWN, 0, 4],
                 [LEFT, 0, 4],
                 [RIGHT, 1, 4]
             ],
-        circles_remove = screw_holes      
+        circles_add = [
+                [(z/8)/2, x+(z/8), z/2 - (z/8)/2],
+                [(z/8)/2, -(z/8), z/2 - (z/8)/2],
+        ], 
+        circles_remove = screw_holes
     );
     
 color("Gold",0.75)
