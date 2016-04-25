@@ -6,8 +6,8 @@ from time import sleep
 
 class Net:
     pwm_resolution = 4095
-    color_correction = [1, 0.70, 0.25]
-    # color_correction = [1, 1, 1]
+    # color_correction = [1, 0.70, 0.25]
+    color_correction = [1, 1, 1]
     gamma = 2.8
 
     ip = None
@@ -16,6 +16,8 @@ class Net:
     debug = False
 
     sck = None
+
+
 
     def __init__(self, ip, port, debug=False):
         self.ip = ip
@@ -27,6 +29,8 @@ class Net:
 
         self.delay = 0.03
         self.generator = None
+
+        self.state = None
 
     def gamma_correction(self, i):
         """Return Gamma-corrected PWM-value."""
@@ -40,6 +44,7 @@ class Net:
 
     def send(self, state):
         """Send a state of colors to ESP."""
+        self.state = state
         data = bytearray([0, 126])  # "\x00\x7e"
         for strip_color in state:
             strip_pwm = self.rgb_to_pwm(strip_color)
@@ -56,6 +61,7 @@ class Net:
             sleep(self.delay)
 
     def start_sender_thread(self, delay=0.03):
+        self.stop_sender_thread()
         self.delay = delay
         if not self.generator:
             print("Set generator first.")

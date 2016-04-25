@@ -114,6 +114,9 @@ class FFT:
             # self.data_in.pause(0) # Resume capture
 
     def start_analyse_thread(self):
+        if self.run_thread is True:
+            return
+
         self.run_thread = True
         thread = Thread(target=self.analyse)
         thread.start()
