@@ -1,17 +1,19 @@
 import alsaaudio as aa
+from struct import unpack
 from threading import Thread
 from time import sleep
-from struct import unpack
+
 import numpy as np
 
+
 class FFT:
-    def __init__(self):
+    def __init__(self, alsacard):
         """Set up audio."""
         self.sample_rate = 44100
         self.no_channels = 1
-        self.chunk = 512 # Use a multiple of 8
-        self.buffersize= (4 * self.chunk)
-        self.data_in = aa.PCM(aa.PCM_CAPTURE, aa.PCM_NORMAL, 'front:CARD=Set,DEV=0')
+        self.chunk = 512  # Use a multiple of 8
+        self.buffersize = (4 * self.chunk)
+        self.data_in = aa.PCM(aa.PCM_CAPTURE, aa.PCM_NORMAL, alsacard)
         self.data_in.setchannels(self.no_channels)
         self.data_in.setrate(self.sample_rate)
         self.data_in.setformat(aa.PCM_FORMAT_S16_LE)
@@ -40,19 +42,19 @@ class FFT:
         # Try logarithmic binning here
         self.logpower = []
         start = 2
-        for i in [x ** 3 for x in range(1, 9)]:
+        for i in range(1, 40):
             # print(i, start, start+i)
             self.logpower.append(np.int_(np.amax(power2[start:start + i])))
             start = start + i
         self.matrix = self.logpower
 
-        #if remove_noise:
+        # if remove_noise:
         #    self.matrix = np.clip([ (a-b) for a,b in zip(matrix, self.noise)],0,500)
-        #else:
+        # else:
         #    self.matrix = matrix
 
     def findnoise(self):
-        l,data = self.data_in.read()
+        l, data = self.data_in.read()
         while not l:
             l, data = self.data_in.read()
         self.calculate_levels(data, self.chunk, self.sample_rate, False)
@@ -60,9 +62,9 @@ class FFT:
 
     def read_data(self):
         # Read data from device
-        l,data = self.data_in.read()
+        l, data = self.data_in.read()
         # Convert raw data to numpy array
-        data = unpack("%dh"%(len(data)/2),data)
+        data = unpack("%dh" % (len(data) / 2), data)
         data = np.array(data, dtype='h')
         # shift buffer, append to end
         self.buffer = np.append(self.buffer[self.chunk:], data)
@@ -80,8 +82,8 @@ class FFT:
         if len(power) != len(self.power_min):
             self.power_min = [0] * len(power)
 
-        self.power_max = [max(a, b) for a,b in zip(power, self.power_max)]
-        self.power_min = [min(a, b) for a,b in zip(power, self.power_min)]
+        self.power_max = [max(a, b) for a, b in zip(power, self.power_max)]
+        self.power_min = [min(a, b) for a, b in zip(power, self.power_min)]
         # Scaling attempts
         #
         # Okay:
@@ -91,7 +93,8 @@ class FFT:
         # intensity = [a/(b/100) for a,b in zip(power, self.power_max)]
         #
         # Min and Max scaling:
-        intensity = [((max_val * (power[i] - self.power_min[i])) // (self.power_max[i] - self.power_min[i])) for i in range(len(power))]
+        intensity = [((max_val * (power[i] - self.power_min[i])) // (self.power_max[i] - self.power_min[i])) for i in
+                     range(len(power))]
 
         return intensity
 

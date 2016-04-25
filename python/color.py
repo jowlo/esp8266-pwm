@@ -2,9 +2,7 @@ import colorsys
 import math
 
 
-
 class Color:
-
     white = [1, 1, 1]
 
     red = [1, 0, 0]
@@ -23,8 +21,6 @@ class Color:
     dark_blue = [0.0, 0.0, 0.5019607843137255]
     light_blue = [0.0, 0.7490196078431373, 1.0]
 
-
-
     def alpha(self, color, alpha):
         """Return a color with set alpha."""
         return [alpha * c for c in color]
@@ -32,22 +28,21 @@ class Color:
     def pseudocolor(self, start, end, val, minval=0, maxval=100):
         hmin = colorsys.rgb_to_hsv(*start)[0]
         hmax = colorsys.rgb_to_hsv(*end)[0]
-        h = hmin + ((float(val-minval) / (maxval-minval)) * (hmax-hmin))
+        h = hmin + ((float(val - minval) / (maxval - minval)) * (hmax - hmin))
         # print(h, (val-minval), (maxval+1-val) )
         return colorsys.hsv_to_rgb(h, 1., 1.)
 
     def hsv_gradient(self, steps, start, end, minval=0, maxval=100):
         colors = []
-        for val in range(minval, maxval, int((maxval-minval)/steps)):
+        for val in range(minval, maxval, int((maxval - minval) / steps)):
             colors.append(self.pseudocolor(start, end, val, minval, maxval))
         return colors
 
     def black_to_color_map(self, steps, color, minval=0, maxval=100):
         colors = []
-        for val in range(minval, maxval, (maxval-minval)//steps):
-            colors.append(self.alpha(color, (val-minval)/(maxval)))
+        for val in range(minval, maxval, (maxval - minval) // steps):
+            colors.append(self.alpha(color, (val - minval) / (maxval)))
         return colors
-
 
     def rainbow_colors(self, num=2000, freq=.03):
         """Return list of rainbow colors with num elements"""

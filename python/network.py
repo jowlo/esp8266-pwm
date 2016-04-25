@@ -1,13 +1,13 @@
-import socket
 import binascii
+import socket
 from threading import Thread
 from time import sleep
 
-class Net:
 
+class Net:
     pwm_resolution = 4095
     color_correction = [1, 0.70, 0.25]
-    #color_correction = [1, 1, 1]
+    # color_correction = [1, 1, 1]
     gamma = 2.8
 
     ip = None
@@ -16,8 +16,6 @@ class Net:
     debug = False
 
     sck = None
-
-
 
     def __init__(self, ip, port, debug=False):
         self.ip = ip
@@ -52,12 +50,10 @@ class Net:
             print(binascii.hexlify(data))
         self.sck.sendto(data, (self.ip, self.port))
 
-
     def iterate(self, output=False, run=False):
         while self.run_thread or run:
             self.send(next(self.generator))
             sleep(self.delay)
-
 
     def start_sender_thread(self, delay=0.03):
         self.delay = delay

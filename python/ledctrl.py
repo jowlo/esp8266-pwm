@@ -1,39 +1,42 @@
-import math
 import argparse
+import math
 import time
-from fft import FFT
+
 import numpy as np
+
 from color import Color
+from fft import FFT
 from network import Net
 from state_factory import State
-from threading import Thread
 
-DEBUG=False
+DEBUG = False
 
-argparser = argparse.ArgumentParser()
-argparser.add_argument("--nofft", help="Do not start FFT-Thread (No Audio Input).",
-                       action="store_true")
-args = argparser.parse_args()
-
-
-STRIPS = 10
-# UDP_IP = "192.168.178.39"
-UDP_IP = "192.168.4.1"
-UDP_PORT = 5555
-
-
-#GROUPS = [[1], [2, 3], [4, 5, 6], [7, 8], [9]]
-GROUPS = [[a] for a in list(range(0,9))]
+# GROUPS = [[1], [2, 3], [4, 5, 6], [7, 8], [9]]
+GROUPS = [[a] for a in list(range(0, 9))]
 
 g_center_out = [[4], [0, 8], [1, 7], [2, 6], [3, 5]]
 g_front_to_back = [[0, 8], [1, 7], [2, 6], [3, 5]]
 g_left_to_right = [[0], [1], [2], [3], [5], [6], [7], [8]]
 
-if not args.nofft:
-    FFT_INST = FFT()
+UDP_IP = "192.168.4.1"
+UDP_PORT = 5555
 N = Net(UDP_IP, UDP_PORT)
+
+STRIPS = 10
 S = State(STRIPS)
 Color = Color()
+FFT_INST = None
+
+def main():
+
+    argparser = argparse.ArgumentParser()
+    argparser.add_argument("--fft-device:", help="Do not start FFT-Thread (No Audio Input).",
+                           action="store_true")
+    args = argparser.parse_args()
+
+    if args.fft-device:
+        # FFT_INST = FFT('front:CARD=Set,DEV=0')
+        FFT_INST = FFT('front:CARD=CODEC,DEV=0')
 
 
 def full_color(color):
@@ -90,12 +93,14 @@ def sine_map_state(state, i, groups=GROUPS, freq=0.5):
     return state
 
 
-def move_color_state(color, groups=GROUPS):
+def move_color_state(color, groups=GROUPS, base=None):
+    if base is None:
+        base=S.state_off()
     """Yield states with one color moving through strips."""
     i = 0;
     while True:
         i = (i + 1) % len(groups)
-        yield S.set_strips(S.state_off(), groups[i], color)
+        yield S.set_strips(base, groups[i], color)
 
 
 def alpha_state(state, i, freq=0.3):
@@ -203,7 +208,7 @@ def fft_pulse_map(colors=Color.heat_colors(), scale=1, delay=0.03, threshold=0, 
         intensity = [((scale * i) if i > threshold else 0) for i in FFT_INST.intensity()]
         if DEBUG:
             print(intensity)
-        state = S.full_color(colors[np.clip(intensity[channel], 0, len(colors)-1)])
+        state = S.full_color(colors[np.clip(intensity[channel], 0, len(colors) - 1)])
         yield state
 
 
@@ -227,7 +232,7 @@ def fft_pulse_cycle(cycle_colors=Color.rainbow_colors(), scale=1, delay=0.03, th
         intensity = [((scale * i) if i > threshold else 0) for i in FFT_INST.intensity()]
         if DEBUG:
             print(intensity)
-        state = S.full_color(Color.alpha(cycle_colors[cycle], intensity[channel]/100))
+        state = S.full_color(Color.alpha(cycle_colors[cycle], intensity[channel] / 100))
         yield state
 
 
@@ -239,11 +244,12 @@ def fft_move_color(color=Color.white, groups=GROUPS, channel=0, decay=0.8, scale
         if DEBUG:
             print(intensity)
         nextstate = S.state_off()
-        for i in range(1,len(groups)):
-            S.set_strips(nextstate, groups[i], Color.alpha(state[groups[i-1][0]], decay))
-        S.set_strips(nextstate, groups[0], Color.alpha(color, intensity[channel]/100))
+        for i in range(1, len(groups)):
+            S.set_strips(nextstate, groups[i], Color.alpha(state[groups[i - 1][0]], decay))
+        S.set_strips(nextstate, groups[0], Color.alpha(color, intensity[channel] / 100))
         state = nextstate[:]
         yield state
+
 
 def fft_move_map(colors=Color.heat_colors(), groups=GROUPS, channel=0, scale=1, delay=0.03, decay=1, threshold=0):
     fft_init()
@@ -253,8 +259,8 @@ def fft_move_map(colors=Color.heat_colors(), groups=GROUPS, channel=0, scale=1, 
         if DEBUG:
             print(intensity)
         nextstate = S.state_off()
-        for i in range(1,len(groups)):
-            S.set_strips(nextstate, groups[i], Color.alpha(state[groups[i-1][0]], decay))
+        for i in range(1, len(groups)):
+            S.set_strips(nextstate, groups[i], Color.alpha(state[groups[i - 1][0]], decay))
         S.set_strips(nextstate, groups[0], colors[int(np.clip(intensity[channel], 0, 99))])
         state = nextstate[:]
         yield state
@@ -270,49 +276,9 @@ def stop_all_threads():
     N.send(S.state_off())
     FFT_INST.stop_analyse_thread()
 
-
-
-def fft_test(mode='EQ', color=Color.white, channel=0, scale=1, delay=0.03, decay=0.8, groups=GROUPS):
-    """ Deprecated. Use Individual Functions."""
-    fft_init()
-    cycle = 1
-    state = S.state_off()
-    heat_colors = Color.heat_colors()
-    rainbow_colors = Color.rainbow_colors(num=100)
-
-    while True:
-        cycle = (cycle + 1) % 100
-        intensity = [scale * i for i in FFT_INST.intensity()]
-        if DEBUG:
-            print(intensity)
-        if mode is 'EQ':
-            for i in range(len(GROUPS)):
-                if i < len(intensity):
-                    S.set_strips(state, GROUPS[i], heat_colors[np.clip(intensity[i], 0, 99)])
-        elif mode is 'PULSE_HEAT':
-            state = S.full_color(heat_colors[np.clip(intensity[channel], 0, 99)])
-        elif mode is 'PULSE_COLOR':
-            state = S.full_color(Color.alpha(color, intensity[channel] / 100))
-        elif mode is 'PULSE_RAINBOW':
-            state = S.full_color(Color.alpha(rainbow_colors[cycle], intensity[channel] / 100))
-        elif mode is 'MOVE_BIT_COLOR':
-            state.insert(0, Color.alpha(color, intensity[channel] / 100))
-            state.pop()
-            print(state)
-        elif mode is 'MOVE_BIT_DECAY':
-            nextstate = S.state_off()
-            for i in range(1,len(groups)):
-                S.set_strips(nextstate, groups[i], Color.alpha(state[groups[i-1][0]], decay))
-            S.set_strips(nextstate, groups[0], Color.alpha(color, intensity[channel]/100))
-            state = nextstate[:]
-        elif mode is 'MOVE_BIT_HEAT':
-            nextstate = S.state_off()
-            for i in range(1,len(groups)):
-                S.set_strips(nextstate, groups[i], state[groups[i - 1][0]])
-            S.set_strips(nextstate, groups[0], heat_colors[np.clip(intensity[channel], 0, 99)])
-            state = nextstate[:]
-
-        N.send(state)
+def testrgb(delay):
+    for c in [Color.red, Color.green, Color.blue, Color.white]:
+        full_color(c)
         time.sleep(delay)
 
 

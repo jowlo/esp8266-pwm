@@ -1,4 +1,4 @@
-include <lasercut.scad>; 
+include <lasercut/lasercut.scad>; 
 include <2d_m3-nutlock.scad>; 
 
 thickness = 3;
@@ -40,7 +40,7 @@ flash_cutout_circ = [
 module front() {
     union() {
         lasercutoutSquare(thickness=thickness, x=x, y=y,
-            bumpy_finger_joints=[
+            finger_joints=[
                     [UP, 1, 8],
                     [DOWN, 1, 8],
                     [LEFT, 1, 4],
@@ -57,7 +57,7 @@ module back() {
 translate([0,0,-z - thickness]){
     union() {
         lasercutoutSquare(thickness=thickness, x=x, y=y,
-            bumpy_finger_joints=[
+            finger_joints=[
                     [UP, 0, 8],
                     [DOWN, 0, 8],
                     [LEFT, 1, 4],
@@ -116,12 +116,10 @@ translate([-thickness,0,0])
     lasercutoutSquare(thickness=thickness, x=z, y=y,
         finger_joints=[
                 [LEFT, 0, 4],
-                [RIGHT, 1, 4]
-            ],
-        bumpy_finger_joints=[
+                [RIGHT, 1, 4],
                 [UP, 1, 4],
                 [DOWN, 0, 4]
-        ],
+            ],
         circles_remove = [
                 [3, z-10, y-y/4], // antenna
                 [4, z-10, y/4] // power
@@ -135,11 +133,9 @@ translate([x,0,0])
     lasercutoutSquare(thickness=thickness, x=z, y=y,
         finger_joints=[
                 [LEFT, 0, 4],
-                [RIGHT, 1, 4]
-            ],
-        bumpy_finger_joints=[
+                [RIGHT, 1, 4],
                 [UP, 1, 4],
-                [DOWN, 0, 4],        
-            ]        
+                [DOWN, 0, 4],  
+            ]
     );
 
