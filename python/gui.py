@@ -1,6 +1,10 @@
+#!/bin/python3
 from gi.repository import Gtk, Gdk
 
 from gui_handler import Handler
+
+settings = Gtk.Settings.get_default()
+settings.set_property("gtk-application-prefer-dark-theme", True)
 
 builder = Gtk.Builder()
 builder.add_from_file("glade/2ndgui.glade")

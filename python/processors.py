@@ -30,11 +30,7 @@ class MoveColor(Processor):
                 color = color_provider()
                 source = self.controller.fft.intensity()
                 nextstate = self.base()
-
                 intensity = [((self.scale * i) if i > self.threshold else 0) for i in source]
-
-
-                sys.stdout.write(str(len(intensity)) + " " + str(self.channel))
                 if self.channel < len(intensity):
                     for i, group in enumerate(self.controller.groups):
                         self.controller.state_factory.set_strips(nextstate,
@@ -48,6 +44,8 @@ class MoveColor(Processor):
                                                   self.controller.color.alpha(color, intensity[self.channel] / 100))
                     state = nextstate[:]
                 yield state
+        return generator()
+
 
 class PulseColor(Processor):
     def __init__(self, controller, source, base):

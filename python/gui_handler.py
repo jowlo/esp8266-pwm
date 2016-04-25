@@ -107,7 +107,7 @@ class Handler:
         if treeiter != None:
             print("You selected", model[treeiter][0])
 
-    def send_static(self, button):
+    def send_static(self, *args):
         colorchooser = self.builder.get_object("color_static")
         color = colorchooser.get_rgba()
         color = [color.red, color.green, color.blue]
@@ -148,7 +148,7 @@ class Handler:
         def color_provider():
             c = self.builder.get_object("color_static").get_rgba()
             return [c.red, c.green, c.blue]
-        self.provider = PulseColor(self.controller, self.controller.fft.intensity,
+        self.provider = MoveColor(self.controller, self.controller.fft.intensity,
                                    self.controller.state_factory.state_off)
         self.controller.network.generator = self.provider.process(color_provider)
         self.controller.network.start_sender_thread()
@@ -169,4 +169,6 @@ class Handler:
         if self.provider:
             self.provider.channel = int(scale.get_value())
         return True
+
+
 
