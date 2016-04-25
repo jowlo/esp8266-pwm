@@ -72,7 +72,7 @@ class Handler:
 
         self.controller = LED_Controller(10, "192.168.4.1", 5555)
 
-        self.fft_bars = [builder.get_object("fft_" + str(i)) for i in range(40)]
+        self.fft_bars = [builder.get_object("fft_bar_" + str(i)) for i in range(40)]
 
         self.fft_timeout = GObject.timeout_add(50, self.fft_callback, None)
         self.state_timeout = GObject.timeout_add(30, self.state_update, None)
