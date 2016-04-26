@@ -27,6 +27,11 @@ class FFT:
         self.run_thread = False
         self.window = np.blackman(self.buffersize)
         self.fourier = []
+        self.thread = False
+
+    @classmethod
+    def available_pcms(cls):
+        return aa.pcms()
 
     def calculate_levels(self, data, chunk, sample_rate, remove_noise=False):
         # Apply FFT - real data so rfft used
@@ -70,7 +75,7 @@ class FFT:
         self.buffer = np.append(self.buffer[self.chunk:], data)
         if len(self.buffer) != self.buffersize:
             # print(len(self.buffer))
-            self.read_data()
+            return self.read_data()
         else:
             return l
 
@@ -118,9 +123,10 @@ class FFT:
             return
 
         self.run_thread = True
-        thread = Thread(target=self.analyse)
-        thread.start()
+        self.thread = Thread(target=self.analyse)
+        self.thread.start()
         print("FFT Thread started.")
 
     def stop_analyse_thread(self):
         self.run_thread = False
+        self.thread.join()

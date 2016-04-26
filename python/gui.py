@@ -1,6 +1,7 @@
 #!/bin/python3
+import gi
+gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, Gdk
-
 from gui_handler import Handler
 
 settings = Gtk.Settings.get_default()
