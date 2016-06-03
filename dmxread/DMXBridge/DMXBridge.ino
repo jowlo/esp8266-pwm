@@ -96,6 +96,7 @@ void loop() {
     Udp.beginPacket(remoteip, localport);
     Udp.write(PWM_CMD);
     for(int i = 0; i < 30; i++){
+      int a = ESP8266DMX.getSlot(i);
       Udp.write(a);
     }
     Udp.endPacket();
