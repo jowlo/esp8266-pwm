@@ -47,7 +47,8 @@ void setup() {
   WiFi.mode(WIFI_STA);
 
 
-  WiFi.begin(ssid, password);
+  //WiFi.begin(ssid, password);
+  WiFi.begin(ssid);
   
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
@@ -57,7 +58,7 @@ void setup() {
   localport = 5555;
   remoteport = 5555;
   remoteip = WiFi.localIP();
-  remoteip[3] = 23;
+  remoteip[3] = 1;
   broadcast_ip = WiFi.localIP();
   broadcast_ip[3] = 255;
 
@@ -84,9 +85,7 @@ void gotDMXCallback(int slots) {
   And then reads the level of dimmer 1 to set PWM level of LED connected to pin 14
   
 *************************************************************************/
-void udp_send(uint value);
 void send_beacon();
-int loopcount = 0;
 void loop() {
   if ( got_dmx ) {
     /* DMX */
@@ -94,29 +93,19 @@ void loop() {
     int a = ESP8266DMX.getSlot(1);
     analogWrite(14,2*a);
     Udp.beginPacket(remoteip, localport);
+    Udp.write((uint8_t)0);
     Udp.write(PWM_CMD);
-    for(int i = 0; i < 30; i++){
-      int a = ESP8266DMX.getSlot(i);
-      Udp.write(a);
+    for(int i = 1; i < 31; i++){
+      uint8_t val = ESP8266DMX.getSlot(i);
+      Udp.write(val>>4);
+      Udp.write(val<<4);
     }
     Udp.endPacket();
-    
-    /* Wifi */
   }
-  if (loopcount == 5000) {
-      loopcount = 0;
-     // send_beacon();
-  }
-  loopcount++;
+  delay(30);
 }
 
 void send_beacon() {
-
-/*
-  WiFi.printDiag(Serial);
-
-  Serial << "Sending beacon to " << broadcast_ip << "\n";
-*/
   // transmit broadcast package
   Udp.beginPacket(broadcast_ip, localport);
   Udp.write("Hello\n I am a DMX Bridge at ");
