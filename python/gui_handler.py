@@ -24,10 +24,10 @@ class Barchart:
         self.threshold = 0
 
     def bar(self, i, value):
-        barwidth = 1 / self.bars
+        barwidth = 1 / (2*self.bars)
         # self.ctx.rectangle(1 - value/100, i * self.barwidth, 1, (i+1) * self.barwidth) # 1 - abs(value)/100)
-        self.ctx.move_to(i * barwidth, 1-(value/100))
-        self.ctx.line_to((i+1) * barwidth, 1-(value/100))
+        self.ctx.move_to(2 * i * barwidth, 1-(value/100))
+        self.ctx.line_to(2* (i * barwidth) + barwidth, 1-(value/100))
         self.ctx.set_line_width(.01)
 
     def draw_test(self):
@@ -76,6 +76,48 @@ class Strip_Display():
         return True
 
 
+class Grouper:
+    def __init__(self, strips, handler):
+        self.handler = handler
+        grouping_area = handler.builder.get_object("grouping_area")
+        self.box = Gtk.Grid()
+        grouping_area.add(self.box)
+
+        self.groups = dict()
+        self.combos = list()
+
+        group_store = Gtk.ListStore(int, str)
+        for i in range(strips):
+            group_store.append([i, "Group " + str(i + 1)])
+
+        for i in range(strips):
+            label = Gtk.Label()
+            label.set_text("Strip " + str(i))
+            label.set_justify(Gtk.Justification.LEFT)
+            self.box.attach(label, 0, i, 1, 1)
+            group_combo = Gtk.ComboBox.new_with_model_and_entry(group_store)
+            self.combos.append(group_combo)
+            group_combo.connect("changed", self.update_groups)
+            group_combo.set_entry_text_column(1)
+            group_combo.set_active(i)
+            self.box.attach(group_combo, 1, i, 1, 1)
+
+    def update_groups(self, combo):
+        self.groups = [list() for _ in range(self.handler.controller.strips)]
+        for i, box in enumerate(self.combos):
+            print(box.get_active())
+            self.groups[box.get_active()].append(i)
+
+        print(self.groups)
+        print([group for group in self.groups if group != []])
+        self.handler.controller.groups = [group for group in self.groups if group != []]
+        return True
+
+
+
+
+
+
 
 
 class Handler:
@@ -97,9 +139,22 @@ class Handler:
 
         self.provider = None
 
+
         self.pcm_chooser = builder.get_object("pcm_combo_box")
         for pcm in FFT.available_pcms():
             self.pcm_chooser.append_text(pcm)
+
+        self.grouper = Grouper(self.controller.strips, self)
+
+        self.fft_effect_chooser = builder.get_object("fft_effect_combo")
+        self.effects = {
+            "PulseColor": PulseColor,
+            "MoveColor": MoveColor
+        }
+        for effect in self.effects.keys():
+            self.fft_effect_chooser.append_text(effect)
+        self.fft_effect_chooser.set_entry_text_column(0)
+        self.fft_effect_chooser.set_active(0)
 
     def fft_draw(self, wid, ctx):
         if self.controller.fft is None:
@@ -153,6 +208,9 @@ class Handler:
         if self.strip_display:
             self.strip_display.draw()
 
+    def update_groups(self):
+        pass
+
     def fft_state(self, button, none):
         if self.builder.get_object("fft_state_switch").get_active():
             self.cardstring = self.pcm_chooser.get_active_text()
@@ -168,6 +226,9 @@ class Handler:
             self.pcm_chooser.set_sensitive(True)
 
     def fft_start(self, button):
+        self.update_fft_effect()
+
+    def update_fft_effect(self):
         def color_provider():
             c = self.builder.get_object("color_static").get_rgba()
             return [c.red, c.green, c.blue]
@@ -179,10 +240,13 @@ class Handler:
 
         relax = Relaxation(self.controller, self.controller.fft.intensity, 3)
         time.sleep(1)
-        self.provider = MoveColor(self.controller, relax.process,
-                                  self.controller.state_factory.state_off)
+        print(str(self.fft_effect_chooser.get_active_text()))
+        effect_class = self.effects[self.fft_effect_chooser.get_active_text()] # i.e. PulseColor
+        self.provider = effect_class(self.controller, relax.process, self.controller.state_factory.state_off)
         self.controller.network.generator = self.provider.process(color_provider)
         self.controller.network.start_sender_thread()
+        time.sleep(1)
+
 
     def fft_decay_value_changed_cb(self, scale):
         self.provider.decay = scale.get_value()
@@ -200,6 +264,11 @@ class Handler:
     def fft_channel_changed(self, scale):
         if self.provider:
             self.provider.channel = int(scale.get_value())
+        return True
+
+    def fft_effect_changed(self, effect):
+        if self.builder.get_object("fft_state_switch").get_active():
+            self.update_fft_effect()
         return True
 
 

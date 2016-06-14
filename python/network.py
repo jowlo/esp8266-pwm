@@ -23,7 +23,8 @@ class Net:
         self.gamma = 2.8
         self.pwm_resolution = 4095
 
-        self.color_correction = [1, 0.70, 0.25]
+        # self.color_correction = [1, 0.70, 0.25]
+        self.color_correction = [1, 1, 1]
 
 
     def gamma_correction(self, i):
