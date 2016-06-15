@@ -84,6 +84,8 @@ class Equalizer(Processor):
             state = self.base()
             source_data = self.source()
             bucket_size = (len(source_data) // len(self.controller.groups))
+            if bucket_size < 1:
+                bucket_size = 1
             print(bucket_size)
             while True:
                 color = color_provider()

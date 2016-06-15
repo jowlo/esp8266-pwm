@@ -6,7 +6,7 @@ from processors import MoveColor, PulseColor, Relaxation, Equalizer
 from fft import FFT
 
 
-class Barchart:
+class BarChart:
     def __init__(self, bars, ctx, width, height):
         self.bars = bars
         self.width = width
@@ -52,7 +52,8 @@ class Barchart:
         self.ctx.stroke()
         self.draw_threshold()
 
-class Strip_Display():
+
+class StripDisplay():
     def __init__(self, bars, source, ctx):
         self.bars = bars
         self.ctx = ctx
@@ -63,7 +64,7 @@ class Strip_Display():
 
     def draw(self):
         if not self.source:
-            return
+            return True
         for i, value in enumerate(self.source): # self.controller.network.state):
             self.ctx.set_source_rgb(value[0], value[1], value[2])
             self.ctx.rectangle(0, (i * self.spacing), self.width, self.width)
@@ -100,19 +101,10 @@ class Grouper:
     def update_groups(self, combo):
         self.groups = [list() for _ in range(self.handler.controller.strips)]
         for i, box in enumerate(self.combos):
-            print(box.get_active())
             self.groups[box.get_active()].append(i)
 
-        print(self.groups)
-        print([group for group in self.groups if group != []])
         self.handler.controller.groups = [group for group in self.groups if group != []]
         return True
-
-
-
-
-
-
 
 
 class Handler:
@@ -136,7 +128,6 @@ class Handler:
 
         self.relaxation_box = self.builder.get_object("relaxation_frame_count")
 
-
         self.pcm_chooser = builder.get_object("pcm_combo_box")
         for pcm in FFT.available_pcms():
             self.pcm_chooser.append_text(pcm)
@@ -153,15 +144,16 @@ class Handler:
             self.fft_effect_chooser.append_text(effect)
         self.fft_effect_chooser.set_entry_text_column(0)
         self.fft_effect_chooser.set_active(0)
+        self.builder.get_object("fft_rescale_button").set_sensitive(False)
 
     def fft_draw(self, wid, ctx):
         if self.controller.fft is None:
             self.fft_darea.set_size_request(600, 400)
-            self.chart = Barchart(40, ctx, 600, 400)
+            self.chart = BarChart(40, ctx, 600, 400)
             self.chart.draw([0] * 40)
             return
         self.fft_darea.set_size_request(600, 400)
-        self.chart = Barchart(40, ctx, 600, 400)
+        self.chart = BarChart(40, ctx, 600, 400)
         self.chart.threshold = self.provider.threshold
         self.chart.draw([self.provider.scale * i for i in self.controller.fft.intensity()])
         wid.queue_draw()
@@ -191,14 +183,14 @@ class Handler:
             return True
         intensity = self.controller.fft.intensity()
         for bar, value in zip(self.fft_bars, intensity):
-            bar.set_value(max(0, value/100))
+            bar.set_value(max(0.1, value/100))
         if self.chart:
             self.chart.draw([self.provider.scale * i for i in intensity])
         return True
 
     def state_draw(self, wid, ctx):
         self.state_darea.set_size_request(20, 200)
-        self.strip_display = Strip_Display(10, self.controller.network.state, ctx)
+        self.strip_display = StripDisplay(10, self.controller.network.state, ctx)
         self.strip_display.draw()
         wid.queue_draw()
 
@@ -218,12 +210,15 @@ class Handler:
             self.controller.fft.start_analyse_thread()
             self.fft_start(button)
             self.fft_darea.queue_draw()
+            self.builder.get_object("fft_rescale_button").set_sensitive(True)
         else:
             self.controller.network.stop_sender_thread()
             self.controller.fft.stop_analyse_thread()
             self.pcm_chooser.set_sensitive(True)
+            self.builder.get_object("fft_rescale_button").set_sensitive(False)
 
     def fft_start(self, button):
+        self.builder.get_object("fft_rescale_button").set_sensitive(True)
         self.update_fft_effect()
 
     def update_fft_effect(self):
@@ -236,7 +231,9 @@ class Handler:
                 print(i)
                 yield i
 
-        relax = Relaxation(self.controller, self.controller.fft.intensity, int(self.relaxation_box.get_text()))
+        relax_value = int(self.relaxation_box.get_text())
+
+        relax = Relaxation(self.controller, self.controller.fft.intensity, relax_value)
         print(relax)
         print(str(self.fft_effect_chooser.get_active_text()))
         effect_class = self.effects[self.fft_effect_chooser.get_active_text()] # i.e. PulseColor
@@ -246,8 +243,9 @@ class Handler:
         # time.sleep(1)
 
     def relax_value_changed_cb(self, text):
-        self.update_fft_effect()
-
+        if self.relaxation_box.get_text() != '':
+            self.update_fft_effect()
+        return True
 
     def fft_decay_value_changed_cb(self, scale):
         self.provider.decay = scale.get_value()
@@ -270,6 +268,11 @@ class Handler:
     def fft_effect_changed(self, effect):
         if self.builder.get_object("fft_state_switch").get_active():
             self.update_fft_effect()
+        return True
+
+    def fft_rescale_button_clicked_cb(self, button):
+        print("Rescaling FFT...")
+        self.controller.fft.rescale()
         return True
 
 
