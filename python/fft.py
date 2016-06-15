@@ -98,8 +98,9 @@ class FFT:
         # intensity = [a/(b/100) for a,b in zip(power, self.power_max)]
         #
         # Min and Max scaling:
-        intensity = [((max_val * (power[i] - self.power_min[i])) // (self.power_max[i] - self.power_min[i])) for i in
-                     range(len(power))]
+        width = [(self.power_max[i] - self.power_min[i]) for i in range(len(power))]
+        width = [i if i > 0 else 1 for i in width]
+        intensity = [((max_val * (power[i] - self.power_min[i])) // width[i]) for i in range(len(power))]
 
         # Relax max_measure
         # self.power_max = [i * 0.9999999999 for i in self.power_max]
