@@ -101,6 +101,9 @@ class FFT:
         intensity = [((max_val * (power[i] - self.power_min[i])) // (self.power_max[i] - self.power_min[i])) for i in
                      range(len(power))]
 
+        # Relax max_measure
+        # self.power_max = [i * 0.9999999999 for i in self.power_max]
+
         return intensity
 
     def rescale(self):

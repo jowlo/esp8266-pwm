@@ -72,6 +72,32 @@ class PulseColor(Processor):
         return generator()
 
 
+class Equalizer(Processor):
+    def __init__(self, controller, source, base):
+        super(Equalizer, self).__init__(controller, source)
+        self.base = base
+        self.scale = 1
+        self.threshold = 0
+
+    def process(self, color_provider=None):
+        def generator():
+            state = self.base()
+            source_data = self.source()
+            bucket_size = (len(source_data) // len(self.controller.groups))
+            print(bucket_size)
+            while True:
+                color = color_provider()
+                source_data = self.source()
+                intensity = [((self.scale * i) if i > self.threshold else 0) for i in source_data]
+                for i, group in enumerate(self.controller.groups):
+                    bucket_intensity = sum(intensity[i * bucket_size: (i + 1) * bucket_size]) / bucket_size
+                    state = self.controller.state_factory.set_strips(
+                        state, group, self.controller.color.alpha(color, (bucket_intensity / 100) ** 2)
+                    )
+                yield state
+        return generator()
+
+
 class Relaxation(Processor):
     def __init__(self, controller, source, relaxation):
         super(Relaxation, self).__init__(controller, source)
@@ -85,7 +111,7 @@ class Relaxation(Processor):
                 zipper = [self.source(), self.source()]
             else:
                 zipper = [self.source(), self.history]
-            return [(old + new)/2 for old, new in zip(*zipper)]
+            return [(old + new)//2 for old, new in zip(*zipper)]
 
         return generate()
 

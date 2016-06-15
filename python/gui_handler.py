@@ -2,13 +2,8 @@ import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, GObject, GdkPixbuf, Gdk
 from ledctrl import LED_Controller
-from processors import MoveColor, PulseColor, Relaxation
+from processors import MoveColor, PulseColor, Relaxation, Equalizer
 from fft import FFT
-import time
-import sys
-import math
-import cairo
-
 
 
 class Barchart:
@@ -139,6 +134,8 @@ class Handler:
 
         self.provider = None
 
+        self.relaxation_box = self.builder.get_object("relaxation_frame_count")
+
 
         self.pcm_chooser = builder.get_object("pcm_combo_box")
         for pcm in FFT.available_pcms():
@@ -149,7 +146,8 @@ class Handler:
         self.fft_effect_chooser = builder.get_object("fft_effect_combo")
         self.effects = {
             "PulseColor": PulseColor,
-            "MoveColor": MoveColor
+            "MoveColor": MoveColor,
+            "Equalizer": Equalizer
         }
         for effect in self.effects.keys():
             self.fft_effect_chooser.append_text(effect)
@@ -238,14 +236,17 @@ class Handler:
                 print(i)
                 yield i
 
-        relax = Relaxation(self.controller, self.controller.fft.intensity, 3)
-        time.sleep(1)
+        relax = Relaxation(self.controller, self.controller.fft.intensity, int(self.relaxation_box.get_text()))
+        print(relax)
         print(str(self.fft_effect_chooser.get_active_text()))
         effect_class = self.effects[self.fft_effect_chooser.get_active_text()] # i.e. PulseColor
         self.provider = effect_class(self.controller, relax.process, self.controller.state_factory.state_off)
         self.controller.network.generator = self.provider.process(color_provider)
         self.controller.network.start_sender_thread()
-        time.sleep(1)
+        # time.sleep(1)
+
+    def relax_value_changed_cb(self, text):
+        self.update_fft_effect()
 
 
     def fft_decay_value_changed_cb(self, scale):
