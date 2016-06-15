@@ -1,6 +1,5 @@
 import abc
-import sys
-import numpy as np
+
 
 class Processor(metaclass=abc.ABCMeta):
     def __init__(self, controller, source):
@@ -15,7 +14,11 @@ class Processor(metaclass=abc.ABCMeta):
         self.source = source
 
 
-class MoveColor(Processor):
+class ToStateProcessor(Processor, metaclass=abc.ABCMeta):
+    pass
+
+
+class MoveColor(ToStateProcessor):
     def __init__(self, controller, source, base):
         super(MoveColor, self).__init__(controller, source)
         self.base = base
@@ -31,7 +34,7 @@ class MoveColor(Processor):
                 color = color_provider()
                 source_data = self.source()
                 nextstate = self.base()
-                intensity = [((self.scale * i) if i > self.threshold else 0) for i in source_data]
+                intensity = [((((self.scale * i) / 100)**2) if i > self.threshold else 0) for i in source_data]
                 if self.channel < len(intensity):
                     for i, group in enumerate(self.controller.groups):
                         self.controller.state_factory.set_strips(nextstate,
@@ -42,13 +45,13 @@ class MoveColor(Processor):
                                                                  )
                     self.controller.state_factory.set_strips(nextstate,
                                                   self.controller.groups[0],
-                                                  self.controller.color.alpha(color, intensity[self.channel] / 100))
+                                                  self.controller.color.alpha(color, intensity[self.channel]))
                     state = nextstate[:]
                 yield state
         return generator()
 
 
-class PulseColor(Processor):
+class PulseColor(ToStateProcessor):
     def __init__(self, controller, source, base):
         super(PulseColor, self).__init__(controller, source)
         self.base = base
@@ -63,16 +66,16 @@ class PulseColor(Processor):
                 source_data = self.source()
                 state = self.base()
 
-                intensity = [((self.scale * i) if i > self.threshold else 0) for i in source_data]
+                intensity = [((((self.scale * i) / 100)**2) if i > self.threshold else 0) for i in source_data]
                 if self.channel < len(intensity):
                     state = self.controller.state_factory.full_color(
-                        self.controller.color.alpha(color, self.scale * intensity[self.channel] / 100)
+                        self.controller.color.alpha(color, self.scale * intensity[self.channel])
                     )
                 yield state
         return generator()
 
 
-class Equalizer(Processor):
+class Equalizer(ToStateProcessor):
     def __init__(self, controller, source, base):
         super(Equalizer, self).__init__(controller, source)
         self.base = base
@@ -90,11 +93,11 @@ class Equalizer(Processor):
             while True:
                 color = color_provider()
                 source_data = self.source()
-                intensity = [((self.scale * i) if i > self.threshold else 0) for i in source_data]
+                intensity = [((((self.scale * i) / 100)**2) if i > self.threshold else 0) for i in source_data]
                 for i, group in enumerate(self.controller.groups):
                     bucket_intensity = sum(intensity[i * bucket_size: (i + 1) * bucket_size]) / bucket_size
                     state = self.controller.state_factory.set_strips(
-                        state, group, self.controller.color.alpha(color, (bucket_intensity / 100) ** 2)
+                        state, group, self.controller.color.alpha(color, bucket_intensity)
                     )
                 yield state
         return generator()
@@ -104,16 +107,21 @@ class Relaxation(Processor):
     def __init__(self, controller, source, relaxation):
         super(Relaxation, self).__init__(controller, source)
         self.relaxation = relaxation
-        self.history = [] * self.relaxation
+        self.history = []
         self.history = self.source()
 
     def process(self):
         def generate():
-            if len(self.history) < len(self.source()):
-                zipper = [self.source(), self.source()]
+            data = self.source()
+            if len(data) == 0:
+                return data
+            if len(self.history) < len(data):
+                zipper = [data, data]
             else:
-                zipper = [self.source(), self.history]
-            return [(old + new)//2 for old, new in zip(*zipper)]
+                zipper = [self.history, data]
+            self.history = [(self.relaxation * old + new) // (self.relaxation + 1)
+                            for old, new in zip(*zipper)]
+            return self.history
 
         return generate()
 

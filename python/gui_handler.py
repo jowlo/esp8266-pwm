@@ -2,7 +2,7 @@ import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, GObject, GdkPixbuf, Gdk
 from ledctrl import LED_Controller
-from processors import MoveColor, PulseColor, Relaxation, Equalizer
+from processors import Processor, ToStateProcessor, Relaxation
 from fft import FFT
 
 
@@ -86,6 +86,7 @@ class Grouper:
         for i in range(strips):
             group_store.append([i, "Group " + str(i + 1)])
 
+
         for i in range(strips):
             label = Gtk.Label()
             label.set_text("Strip " + str(i))
@@ -135,11 +136,12 @@ class Handler:
         self.grouper = Grouper(self.controller.strips, self)
 
         self.fft_effect_chooser = builder.get_object("fft_effect_combo")
-        self.effects = {
-            "PulseColor": PulseColor,
-            "MoveColor": MoveColor,
-            "Equalizer": Equalizer
-        }
+        self.effects = {cls.__name__: cls for cls in ToStateProcessor.__subclasses__()}
+        # self.effects = {
+        #     "PulseColor": PulseColor,
+        #     "MoveColor": MoveColor,
+        #     "Equalizer": Equalizer
+        # }
         for effect in self.effects.keys():
             self.fft_effect_chooser.append_text(effect)
         self.fft_effect_chooser.set_entry_text_column(0)
