@@ -4,6 +4,7 @@ from gi.repository import Gtk, GObject, GdkPixbuf, Gdk
 from ledctrl import LED_Controller
 from processors import Processor, ToStateProcessor, Relaxation
 from fft import FFT
+from strobe import Strobe
 
 
 class BarChart:
@@ -72,6 +73,10 @@ class StripDisplay():
         return True
 
 
+
+
+
+
 class Grouper:
     def __init__(self, strips, handler):
         self.handler = handler
@@ -135,6 +140,8 @@ class Handler:
 
         self.grouper = Grouper(self.controller.strips, self)
 
+        self.strobes = Strobe(self)
+
         self.fft_effect_chooser = builder.get_object("fft_effect_combo")
         self.effects = {cls.__name__: cls for cls in ToStateProcessor.__subclasses__()}
         # self.effects = {
@@ -178,6 +185,9 @@ class Handler:
         color = colorchooser.get_rgba()
         color = [color.red, color.green, color.blue]
         self.controller.full_color(color)
+        def generator():
+            return self.controller.state_factory.full_color(color)
+        self.controller.network.generator = generator
         print(color)
 
     def fft_callback(self, user_data):
@@ -276,6 +286,10 @@ class Handler:
         print("Rescaling FFT...")
         self.controller.fft.rescale()
         return True
+
+    def strobe_add_button_clicked_cb(self, button):
+        print("test")
+        Strobe(self)
 
 
 
