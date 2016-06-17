@@ -52,7 +52,6 @@ class Net:
 
     def iterate(self, output=False, run=False):
         while self.run_thread or run:
-            print(type(self.generator))
             self.send(next(self.generator))
             sleep(self.delay)
 

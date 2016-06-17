@@ -103,6 +103,37 @@ class Equalizer(ToStateProcessor):
         return generator()
 
 
+class HeatEqualizer(ToStateProcessor):
+    def __init__(self, controller, source, base):
+        super(HeatEqualizer, self).__init__(controller, source)
+        self.base = base
+        self.scale = 1
+        self.threshold = 0
+
+    def process(self, color_provider=None):
+        def generator():
+            state = self.base()
+            colors = self.controller.color.heat_colors()
+            state = self.controller.state_factory.state_off()
+
+            source_data = self.source()
+            bucket_size = (len(source_data) // len(self.controller.groups))
+            if bucket_size < 1:
+                bucket_size = 1
+            while True:
+                source_data = self.source()
+                intensity = [((((self.scale * i) / 100)**2) if i > self.threshold else 0) for i in source_data]
+                for i, group in enumerate(self.controller.groups):
+                    bucket_intensity = sum(intensity[i * bucket_size: (i + 1) * bucket_size]) / bucket_size
+                    # bucket_intensity = max(0, min(bucket_intensity, 99))
+                    self.controller.state_factory.set_strips(state, group, colors[
+                        int(bucket_intensity * 100 % 99)
+                    ])
+                yield state
+
+        return generator()
+
+
 class Relaxation(Processor):
     def __init__(self, controller, source, relaxation):
         super(Relaxation, self).__init__(controller, source)

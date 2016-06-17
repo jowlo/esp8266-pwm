@@ -106,7 +106,6 @@ class Strobe:
         self.color_index = 0
         self.rainbow_cycle = self.handler.controller.color.rainbow_colors(freq=self.rainbow_freq)
         def rainbow_provider():
-                print("rainbowcol")
                 self.color_index = (self.color_index + 1) % len(self.rainbow_cycle)
                 return self.rainbow_cycle[self.color_index]
 
