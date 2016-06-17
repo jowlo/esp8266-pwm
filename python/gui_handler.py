@@ -144,16 +144,14 @@ class Handler:
 
         self.fft_effect_chooser = builder.get_object("fft_effect_combo")
         self.effects = {cls.__name__: cls for cls in ToStateProcessor.__subclasses__()}
-        # self.effects = {
-        #     "PulseColor": PulseColor,
-        #     "MoveColor": MoveColor,
-        #     "Equalizer": Equalizer
-        # }
         for effect in self.effects.keys():
             self.fft_effect_chooser.append_text(effect)
         self.fft_effect_chooser.set_entry_text_column(0)
         self.fft_effect_chooser.set_active(0)
         self.builder.get_object("fft_rescale_button").set_sensitive(False)
+
+        self.send_static()
+
 
     def fft_draw(self, wid, ctx):
         if self.controller.fft is None:

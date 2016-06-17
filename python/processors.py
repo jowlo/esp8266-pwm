@@ -122,12 +122,12 @@ class HeatEqualizer(ToStateProcessor):
                 bucket_size = 1
             while True:
                 source_data = self.source()
-                intensity = [((((self.scale * i) / 100)**2) if i > self.threshold else 0) for i in source_data]
+                intensity = [((((self.scale * i) / 100)) if i > self.threshold else 0) for i in source_data]
                 for i, group in enumerate(self.controller.groups):
                     bucket_intensity = sum(intensity[i * bucket_size: (i + 1) * bucket_size]) / bucket_size
                     # bucket_intensity = max(0, min(bucket_intensity, 99))
                     self.controller.state_factory.set_strips(state, group, colors[
-                        int(bucket_intensity * 100 % 99)
+                        int(bucket_intensity * 100 if bucket_intensity * 100 < len(colors) else len(colors) - 1)
                     ])
                 yield state
 

@@ -32,30 +32,46 @@ class Strobe:
         self.rainbow_button.set_label("Rainbow")
         self.rainbow_button.connect("toggled", self.color_chosen, "rainbow")
         button_box.pack_start(self.rainbow_button, False, False, 0)
-        self.grid.attach(button_box, 0, 0, 1, 1)
+        # Initialize to white
+        self.color_chosen(self.white_button, "white")
+        self.grid.attach(button_box, 0, 0, 2, 1)
 
         # Scales for delay and smoothness
         # value, lower, upper, step_increment, page_increment, page_size
-        self.delay_adjustment = Gtk.Adjustment(0.05, 0.0, 1.0, 0.01, 0.1, 0)
-        self.delay_scale = Gtk.Scale(orientation=Gtk.Orientation.HORIZONTAL, adjustment=self.delay_adjustment)
-        self.delay_scale.set_sensitive(True)
-        self.delay_adjustment.connect("value_changed", self.delay_cb)
-        self.duty_adjustment = Gtk.Adjustment(0.05, 0.0, 1.0, 0.01, 0.1, 0)
-        self.duty_scale = Gtk.Scale(orientation=Gtk.Orientation.HORIZONTAL, adjustment=self.duty_adjustment)
-        self.duty_scale.set_sensitive(True)
-        self.duty_adjustment.connect("value_changed", self.duty_cb)
-        self.smoothness_adjustment = Gtk.Adjustment(0.0, 0.0, 1.0, 0.01, 0.1, 0)
+        self.smoothness_adjustment = Gtk.Adjustment(1, 1, 100, 0, 0, 0)
         self.smoothness_scale = Gtk.Scale(orientation=Gtk.Orientation.HORIZONTAL, adjustment=self.smoothness_adjustment)
         self.smoothness_scale.set_sensitive(True)
         self.smoothness_adjustment.connect("value_changed", self.smoothness_cb)
-        self.rainbow_freq_adjustment = Gtk.Adjustment(0.0, 0.1, 1.0, 0.01, 0.1, 0)
+        self.smoothness_scale.set_draw_value(False)
+
+        self.delay_adjustment = Gtk.Adjustment(1, 1, 300, 0, 0.0, 0)
+        self.delay_scale = Gtk.Scale(orientation=Gtk.Orientation.HORIZONTAL, adjustment=self.delay_adjustment)
+        self.delay_scale.set_sensitive(True)
+        self.delay_adjustment.connect("value_changed", self.delay_cb)
+        self.delay_scale.set_draw_value(False)
+
+        self.duty_adjustment = Gtk.Adjustment(1, 1, 100, 0, 0, 0)
+        self.duty_scale = Gtk.Scale(orientation=Gtk.Orientation.HORIZONTAL, adjustment=self.duty_adjustment)
+        self.duty_scale.set_sensitive(True)
+        self.duty_adjustment.connect("value_changed", self.duty_cb)
+        self.duty_scale.set_draw_value(False)
+
+        self.rainbow_freq_adjustment = Gtk.Adjustment(1, 1, 100, 0, 0, 0)
         self.rainbow_freq_scale = Gtk.Scale(orientation=Gtk.Orientation.HORIZONTAL, adjustment=self.rainbow_freq_adjustment)
         self.rainbow_freq_scale.set_sensitive(True)
+        self.rainbow_freq_scale.set_hexpand(True)
+        self.rainbow_freq_scale.set_draw_value(False)
+
         self.rainbow_freq_adjustment.connect("value_changed", self.rainbow_cb)
-        self.grid.attach(self.rainbow_freq_scale, 0, 1, 1, 1)
-        self.grid.attach(self.smoothness_scale, 0, 2, 1, 1)
-        self.grid.attach(self.delay_scale, 0, 3, 1, 1)
-        self.grid.attach(self.duty_scale, 0, 4, 1, 1)
+
+        self.grid.attach(Gtk.Label("Rainbow Frequency"), 0, 1, 1, 1)
+        self.grid.attach(self.rainbow_freq_scale, 1, 1, 1, 1)
+        self.grid.attach(Gtk.Label("Smooth (n/a)"), 0, 2, 1, 1)
+        self.grid.attach(self.smoothness_scale, 1, 2, 1, 1)
+        self.grid.attach(Gtk.Label("Delay"), 0, 3, 1, 1)
+        self.grid.attach(self.delay_scale, 1, 3, 1, 1)
+        self.grid.attach(Gtk.Label("Duty"), 0, 4, 1, 1)
+        self.grid.attach(self.duty_scale, 1, 4, 1, 1)
 
 
 
@@ -63,19 +79,23 @@ class Strobe:
         group_grid = Gtk.Grid()
         for i in range(handler.controller.strips):
             checkbox = Gtk.CheckButton(str(i + 1))
+            checkbox.set_active(True)
             checkbox.connect("toggled", self.group_selected_cb, i)
+            self.group_selected_cb(checkbox, i)
             group_grid.attach(checkbox, i % 5, i // 5, 1, 1)
 
-        self.grid.attach(group_grid, 0, 5, 1, 1)
-
-        self.switch = Gtk.Switch()
-        self.switch.connect("state-set", self.switch_clicked_cb)
-        self.grid.attach(self.switch, 0, 6, 1, 1)
+        self.grid.attach(group_grid, 0, 5, 2, 1)
 
         remove_button = Gtk.Button("Remove")
         remove_button.connect("clicked", self.remove_button_cb)
-        self.grid.attach(remove_button, 1, 7, 1, 1)
+        self.grid.attach(remove_button, 0, 6, 1, 1)
 
+        self.switch = Gtk.Switch()
+        self.switch.connect("state-set", self.switch_clicked_cb)
+        self.grid.attach(self.switch, 1, 6, 1, 1)
+
+        self.grid.set_hexpand(True)
+        self.expander.set_hexpand(True)
         self.expander.add(self.grid)
         self.expander.set_expanded(True)
         self.strobes_box.pack_start(self.expander, False, False, 0)
@@ -122,21 +142,21 @@ class Strobe:
         self.restart()
 
     def delay_cb(self, scale):
-        self.delay = scale.get_value()
+        self.delay = scale.get_value() / 100
         self.restart()
         print("Delay set to: " + str(self.delay))
 
     def duty_cb(self, scale):
-        self.duty = scale.get_value()
+        self.duty = scale.get_value() / 100
         self.restart()
         print("Duty set to: " + str(self.duty))
 
     def smoothness_cb(self, scale):
-        self.smoothness = scale.get_value()
+        self.smoothness = scale.get_value() / 100
         print("Smoothness set to: " + str(self.smoothness))
 
     def rainbow_cb(self, scale):
-        self.rainbow_freq = scale.get_value()
+        self.rainbow_freq = scale.get_value() / 100
         print("Smoothness set to: " + str(self.rainbow_freq))
 
     def remove_button_cb(self, button):
@@ -165,7 +185,7 @@ class Strobe:
             state = self.handler.controller.state_factory.set_strips(state, self.groups, color)
             while True:
                 # if self.handler.strip_display:
-                    # self.handler.strip_display.draw()
+                #    self.handler.strip_display.draw()
                 yield state
         self.handler.controller.network.generator = generator()
 
