@@ -140,7 +140,7 @@ class Handler:
 
         self.grouper = Grouper(self.controller.strips, self)
 
-        self.strobes = Strobe(self)
+        self.strobes = [Strobe(self)]
 
         self.fft_effect_chooser = builder.get_object("fft_effect_combo")
         self.effects = {cls.__name__: cls for cls in ToStateProcessor.__subclasses__()}
@@ -168,6 +168,10 @@ class Handler:
         wid.queue_draw()
 
     def gtk_main_quit(self, *args):
+        for strobe in self.strobes:
+            strobe.kill()
+        GObject.source_remove(self.fft_timeout)
+        GObject.source_remove(self.state_timeout)
         self.controller.stop_all_threads()
         Gtk.main_quit(*args)
 
@@ -186,8 +190,9 @@ class Handler:
         color = [color.red, color.green, color.blue]
         self.controller.full_color(color)
         def generator():
-            return self.controller.state_factory.full_color(color)
-        self.controller.network.generator = generator
+            while True:
+                yield self.controller.state_factory.full_color(color)
+        self.controller.network.generator = generator()
         print(color)
 
     def fft_callback(self, user_data):
@@ -288,8 +293,7 @@ class Handler:
         return True
 
     def strobe_add_button_clicked_cb(self, button):
-        print("test")
-        Strobe(self)
+        self.strobes.append(Strobe(self))
 
 
 
