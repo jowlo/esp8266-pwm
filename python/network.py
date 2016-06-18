@@ -24,6 +24,7 @@ class Net:
         self.pwm_resolution = 4095
 
         # self.color_correction = [1, 0.70, 0.25]
+        # self.color_correction = [.6, .6, .6]
         self.color_correction = [1, 1, 1]
 
 

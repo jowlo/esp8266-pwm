@@ -156,3 +156,37 @@ class Relaxation(Processor):
 
         return generate()
 
+
+class TurnColor(ToStateProcessor):
+    def __init__(self, controller, source, base):
+        super(TurnColor, self).__init__(controller, source)
+        self.base = base
+        self.decay = 0.8
+        self.threshold = 0
+        self.channel = 0
+        self.scale = 1
+
+    def process(self, color_provider=None):
+        def generator():
+            group_count = 0
+            delay_count = 0
+            state = 0
+            while True:
+                real_delay = self.decay * 10 # TODO: remove hack...
+                if delay_count < 1:
+                    delay_count = real_delay
+                    color = color_provider()
+                    source_data = self.source()
+                    state = self.controller.state_factory.state_off()
+                    intensity = [((((self.scale * i) / 100)**2) if i > self.threshold else 0) for i in source_data]
+                    if self.channel < len(intensity) and intensity[self.channel] > 0:
+                        self.controller.state_factory.set_strips(state,
+                                                                self.controller.groups[group_count],
+                                                                # [[0], [1], [2], [3], [7], [4], [5], [6], [8], [9]][group_count],
+                                                                # self.controller.color.alpha(color, intensity[self.channel]))
+                                                                color)
+                    group_count = (group_count + 1) % len(self.controller.groups)
+                else:
+                    delay_count -= 1
+                yield state
+        return generator()

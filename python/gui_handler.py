@@ -104,6 +104,18 @@ class Grouper:
             group_combo.set_active(i)
             self.box.attach(group_combo, 1, i, 1, 1)
 
+        circle_button = Gtk.Button("Circle 1 (Outer first, then inner)")
+        circle_button.connect("clicked", self.circle_group_set)
+        self.box.attach(circle_button, 1, strips + 1, 1, 1)
+
+        circle2_button = Gtk.Button("Circle 2 (Inner and outer)")
+        circle2_button.connect("clicked", self.circle2_group_set)
+        self.box.attach(circle2_button, 1, strips + 3, 1, 1)
+
+        default_button = Gtk.Button("Default")
+        default_button.connect("clicked", self.strips_to_groups_set)
+        self.box.attach(default_button, 1, strips + 4, 1, 1)
+
     def update_groups(self, combo):
         self.groups = [list() for _ in range(self.handler.controller.strips)]
         for i, box in enumerate(self.combos):
@@ -111,6 +123,22 @@ class Grouper:
 
         self.handler.controller.groups = [group for group in self.groups if group != []]
         return True
+
+    def circle_group_set(self, button):
+        self.set_group([[0], [1], [2], [3], [7], [4], [5], [6], [8], [9]])
+
+    def circle2_group_set(self, button):
+        self.set_group([[0], [7], [1], [4], [2], [5], [3], [6]])
+
+    def strips_to_groups_set(self, button):
+        self.set_group([[i] for i in range(self.handler.controller.strips)])
+
+    def set_group(self, groups):
+        self.handler.controller.groups = [group for group in groups if group != []]
+        for i, group in enumerate(groups):
+            for strip in group:
+                self.combos[strip].set_active(i)
+
 
 
 class Handler:
@@ -149,6 +177,7 @@ class Handler:
         self.fft_effect_chooser.set_entry_text_column(0)
         self.fft_effect_chooser.set_active(0)
         self.builder.get_object("fft_rescale_button").set_sensitive(False)
+        self.builder.get_object("fft_channel_scale").set_sensitive(True)
 
         self.send_static()
 
