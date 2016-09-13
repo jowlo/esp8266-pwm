@@ -1,134 +1,168 @@
-/**************************************************************************/
-/*!
-    @file     DMXInputTest.ino
-    @author   Claude Heintz
-    @license  BSD (see LXESP8266DMX LICENSE)
-    @copyright 2015 by Claude Heintz
+/**************************************************************************
 
-    SControl brightness of LED on GPIO14 with DMX address 1
-    @section  HISTORY
+DMX Bridge for Netlights.
 
-    v1.00 - First release
-    v1.01 - Updated for single LX8266DMX class
-*/
-/**************************************************************************/
+Simply reads in all 512 DMX channels and sends them over Wifi (UDP)
+to a Netlights receiver.
+
+
+Based upon LXESP8266DMX (github.com/claudeheintz/LXESP8266DMX) and 
+WifiManager (github.com/tzapu/WiFiManager).
+
+**************************************************************************/
+
 #include <LXESP8266UARTDMX.h>
-#include <WiFiClientSecure.h>
 #include <ESP8266WiFi.h>
-#include <WiFiServer.h>
-#include <WiFiClient.h>
-#include <ESP8266WiFiMulti.h>
+#include <DNSServer.h>            //Local DNS Server used for redirecting all requests to the configuration portal
+#include <ESP8266WebServer.h>     //Local WebServer used to serve the configuration portal
+#include <WiFiManager.h>          //https://github.com/tzapu/WiFiManager WiFi Configuration Magic
 #include <WiFiUdp.h>
+#include <ESP8266mDNS.h>
+#include <Ticker.h>
+
 #include "config.h"
+
+Ticker ticker;
+WiFiUDP Udp;
 
 // Prototypes
 void gotDMXCallback(int slots);
 void send_packet();
 
-
+// Command to send to Controller
 #define PWM_CMD  126 // 0x7e
 
-
-WiFiUDP Udp;
-
-
+// Define output pins
 const int DMX_LED = 14;
 const int ACTIVE_LED = 16;
 const int ACTIVE_SWITCH = 12;
 const int PACKET_DELAY = 20;
 
+// Variables
 int got_dmx = 0;
 int got_dmx_time = 0;
 int active = 0;
 int last_packet_time = 0;
 
 
-IPAddress broadcast_ip, localip, remoteip;
-
-unsigned int localport, remoteport;
-
-void setup() {
-  
-
-  // Setup outputs and inputs
-  pinMode(BUILTIN_LED, OUTPUT);
-
-  
-  pinMode(DMX_LED, OUTPUT);
-  pinMode(ACTIVE_LED, OUTPUT);
-  pinMode(ACTIVE_SWITCH, INPUT_PULLUP);
+IPAddress remoteip;
+unsigned int remoteport;
+unsigned int localport = 5555;
 
 
-  ESP8266DMX.setDataReceivedCallback(&gotDMXCallback);
-  delay(1000);        //avoid boot print??
-  ESP8266DMX.startInput();
 
-  /* WIFI */
-  WiFi.mode(WIFI_STA);
+// CALLBACKS
 
-
-  //WiFi.begin(ssid, password);
-  WiFi.begin(ssid);
-  
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-  }
-
-  localip = WiFi.localIP();
-  localport = 5555;
-  remoteport = 5555;
-  remoteip = WiFi.localIP();
-  remoteip[3] = 1;
-  // remoteip[3] = 23;
-  broadcast_ip = WiFi.localIP();
-  broadcast_ip[3] = 255;
-
-  /*
-  Serial.begin(115200);
-  Serial.println("WiFi connected");
-  Serial.println("IP address (localip): ");
-  Serial.println(WiFi.localIP());
-  Serial.println("IP dst: ");  
-  Serial.println(remoteip);
-  */
-  delay(1000);
+// Blink both lights during configuration
+void config_blink() {
+  digitalWrite(ACTIVE_LED, !digitalRead(ACTIVE_LED));
+  digitalWrite(DMX_LED, !digitalRead(DMX_LED));
 }
 
+// Blink lights during connecting
+void connecting_blink() {
+  digitalWrite(ACTIVE_LED, !digitalRead(ACTIVE_LED));
+  digitalWrite(DMX_LED, !digitalRead(ACTIVE_LED));  
+}
 
-// ***************** input callback function *************
+// Blink lights when configuration mode is entered
+void configModeCallback (WiFiManager *myWiFiManager) {
+  ticker.detach();
+  ticker.attach(0.2, config_blink);
+}
 
+// Set DMX flag to true.
+// Is called when DMX is available
 void gotDMXCallback(int slots) {
   got_dmx = true;
   got_dmx_time = millis();
 }
 
-/************************************************************************
 
-  The main loop checks to see if dmx input is available (got_dmx>0)
-  And then reads the level of dimmer 1 to set PWM level of LED connected to pin 14
+void setup() {
+  // Assemble configuration SSID
+  String config_name = "Netlight-" + String(ESP.getChipId(), HEX);
+  char hostname[15];  
+  config_name.toCharArray(hostname, 15);
+
+  // Setup outputs and inputs
+  pinMode(BUILTIN_LED, OUTPUT);
+  pinMode(DMX_LED, OUTPUT);
+  pinMode(ACTIVE_LED, OUTPUT);
+  pinMode(ACTIVE_SWITCH, INPUT_PULLUP);
+
+  // Start blinking while connecting
+  ticker.attach(0.6, connecting_blink);
+
+  // Start wifi manager (connect to old AP if present, otherwise start config)
+  WiFiManager wifiManager;
   
-*************************************************************************/
-void send_beacon();
-int i = 0;
+  // Reset settings - for testing
+  // wifiManager.resetSettings();
+
+  // Set callback when entering configuration mode (for blinking)
+  wifiManager.setAPCallback(configModeCallback);
+
+  // Set connection attempt timeout before configuration
+  wifiManager.setConnectTimeout(60);
+  
+  // Set configuration timeout before restart
+  wifiManager.setTimeout(180);
+  
+  // Wait for connection/configuration
+  if (!wifiManager.autoConnect(hostname)){
+    ESP.reset();
+    delay(1000);
+  }
+
+  // Connected to Wifi, blink faster
+  ticker.detach();
+  ticker.attach(0.2, connecting_blink);
+
+  // Start mDNS
+  MDNS.begin(hostname);
+
+  // Look for controller
+  int n = 0;
+  while(n == 0){
+    n = MDNS.queryService("netlight-ctrl", "udp");
+  }
+  remoteip = MDNS.IP(0);
+  remoteport = MDNS.port(0);
+
+  // Found controller, stop blinking
+  ticker.detach();
+
+  // Set callback if DMX is read
+  ESP8266DMX.setDataReceivedCallback(&gotDMXCallback);
+  // Start DMX reading
+  ESP8266DMX.startInput();
+}
+
+
+
 void loop() {
+  
   // Read in switch
   int lastactive = active;
   active = (!digitalRead(ACTIVE_SWITCH));
-  
+
   digitalWrite(ACTIVE_LED, active);
-  
+
+  // If DMX has been available in the last 200ms, keep light on.
   if(got_dmx_time > (millis() - 200)){
     digitalWrite(DMX_LED, HIGH);
   } else {
     digitalWrite(DMX_LED, LOW);
   }
 
+  // If deactivated by switch, switch off lights.
   if (!active && lastactive){
     ESP8266DMX.clearSlots();
     send_packet();
   }
 
-  
+  // If DMX channels available, send them out, if enough time is passed
   if (got_dmx) {
     got_dmx = 0;
     // Send DMX over Wifi if active, but not too many packets
@@ -139,16 +173,6 @@ void loop() {
   }
 }
 
-void send_beacon() {
-  // transmit broadcast package
-  Udp.beginPacket(broadcast_ip, localport);
-  Udp.write("Hello\n I am a DMX Bridge at ");
-  Udp.write(broadcast_ip);
-  Udp.write(":");
-  Udp.write(localport);
-  Udp.write(". No connection.");
-  Udp.endPacket();
-}
 
 void send_packet() {
   Udp.beginPacket(remoteip, localport);

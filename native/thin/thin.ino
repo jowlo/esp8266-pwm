@@ -9,12 +9,19 @@
 #include <ESP8266WiFiMulti.h>
 #include <WiFiUdp.h>
 #include <Wire.h>
-
+#include <ESP8266mDNS.h>
 
 #include "config.h"
 
 // Command flags
 #define PWM_CMD  126 // 0x7e
+
+// Prototypes
+int scan_i2c();
+int read2b(byte *buf, int start);
+void printWifiStatus();
+void parse_pwm(byte* buf, int start, int total);
+
 
 
 // no-cost stream operator as described at 
@@ -56,14 +63,30 @@ PCA9685 pca[] = {
 int pwm_max = PCA9685_MAX_VALUE;
 int pwm_min = 0;
 
-int beacon_timer = 0;
 
 WiFiUDP Udp;
 
 void setup()
 {
+
   // Open serial communications
   Serial.begin(115200);
+
+  
+  // Assemble hostname
+  String config_name = "Netlight-Ctrl-" + String(ESP.getChipId(), HEX);
+  char hostname[15];  
+  config_name.toCharArray(hostname, 15);
+
+  // Start mDNS and DNS-SD
+  if (!MDNS.begin(hostname)) {
+    Serial << "Error setting up MDNS responder!";
+  }
+  Serial << "mDNS responder started\n";
+  
+  // Announce controller udp service on localPort
+  MDNS.addService("netlight-ctrl", "udp", localPort);
+
 
   // set up I2C
   Wire.begin(12, 14);
@@ -96,10 +119,10 @@ void setup()
 
   printWifiStatus();
 
-  Serial.println("Connected to wifi");
-  Serial.print("Udp server started at port ");
-  Serial.println(localPort);
+  Serial << "Connected to WiFi.\n";
+
   Udp.begin(localPort);
+  Serial << "Udp server started at port " << localPort << "\n";
 }
 
 void loop()
@@ -126,12 +149,7 @@ void loop()
         Serial.println("cmd n/a");
         break;
     }
-  } else if(millis() - beacon_timer > 5000) { // trigger beacon every 5 seconds
-      beacon_timer = millis();
-      send_beacon();
   }
-
-
 }
 
 void display_packet(byte *buf, int noBytes){
@@ -186,21 +204,6 @@ void printWifiStatus() {
   IPAddress ip = WiFi.softAPIP();
   Serial << "IP Address: " << ip << "\n";
   WiFi.printDiag(Serial);
-}
-
-void send_beacon() {
-  IPAddress ip = WiFi.softAPIP();
-  ip[3] = 255;
-
-  Serial << "Sending beacon to " << ip << "\n";
-
-  // transmit broadcast package
-  Udp.beginPacket(ip, localPort);
-  Udp.write("Hello\n I am a Netlight at ");
-  Udp.write(ip);
-  Udp.write(":");
-  Udp.write(localPort);
-  Udp.endPacket();
 }
 
 int scan_i2c() {
