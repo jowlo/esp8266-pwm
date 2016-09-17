@@ -19,9 +19,11 @@ WifiManager (github.com/tzapu/WiFiManager).
 #include <WiFiUdp.h>
 #include <ESP8266mDNS.h>
 #include <Ticker.h>
+#include "RGBConverter.h"
 
 #include "config.h"
 
+RGBConverter Color;
 Ticker ticker;
 WiFiUDP Udp;
 
@@ -48,6 +50,25 @@ int last_packet_time = 0;
 IPAddress remoteip;
 unsigned int remoteport;
 unsigned int localport = 5555;
+
+/* 
+ *  Typedef enum for different DMX modes.
+ *  
+ *  First channel (0) sets the mode:
+ *  0-50:   RGB_SINGLE
+ *          Each strip has 3 channels with RGB controlled individually
+ *          
+ *  50-100: HSV_ALL
+ *          Channel 1: Hue
+ *          Channel 2: Saturation
+ *          Channel 3: Value
+ *          
+ *  > 100:  HSV_SINGLE
+ *          Channel 1: Hue
+ *          Channel 2: Saturation
+ *          Channel 3 - 13: Value per Strip;
+ */
+typedef enum {RGB_SINGLE, HSV_ALL, HSV_SINGLE} dmx_mode;
 
 
 
@@ -81,6 +102,7 @@ void gotDMXCallback(int slots) {
 
 
 void setup() {
+  
   // Assemble configuration SSID
   String config_name = "Netlight-" + String(ESP.getChipId(), HEX);
   char hostname[15];  
@@ -178,15 +200,77 @@ void loop() {
 }
 
 
+dmx_mode get_mode(int i){
+  if (i < 51) return RGB_SINGLE;
+  if (i < 101) return HSV_ALL;
+  return HSV_SINGLE;
+}
+
+
 void send_packet() {
+  // Read mode from first channel
+  dmx_mode mode = get_mode(ESP8266DMX.getSlot(1));
+
+  // Write command bytes
   Udp.beginPacket(remoteip, localport);
   Udp.write((uint8_t)0);
   Udp.write(PWM_CMD);
-  for(int i = 1; i < 31; i++){
-    uint8_t val = ESP8266DMX.getSlot(i);
-    Udp.write(val>>4);
-    Udp.write(val<<4);
-  }
+  
+  switch (mode){
+    case RGB_SINGLE:
+    {
+      for(int i = 2; i < 32; i++){
+        uint8_t val = ESP8266DMX.getSlot(i);
+        Udp.write(val>>4);
+        Udp.write(val<<4);
+      }
+      break;
+    }
+      
+    case HSV_ALL:
+    {
+      byte rgb[3], brg[3];
+      double h = ESP8266DMX.getSlot(2) / 255.0;
+      double s = ESP8266DMX.getSlot(3) / 255.0;
+      double l = ESP8266DMX.getSlot(4) / 255.0;
+
+      Color.hsvToRgb(h, s, l, rgb);
+      
+      // Strips are Blue-Red-Green
+      brg[0] = rgb[2];
+      brg[1] = rgb[0];
+      brg[2] = rgb[1];
+
+      for(int i = 0; i < 30; i++){
+        Udp.write(brg[i % 3] >> 4);
+        Udp.write(brg[i % 3] << 4);
+      }
+      break;
+    }
+      
+    case HSV_SINGLE:
+    {
+      byte rgb[3], brg[3];
+      double h = ESP8266DMX.getSlot(2) / 255.0;
+      double s = ESP8266DMX.getSlot(3) / 255.0;
+      double l;
+      for(int i = 0; i < 10; i++){
+        l = ESP8266DMX.getSlot(4 + i) / 255.0;
+        
+        Color.hsvToRgb(h, s, l, rgb);
+        // Strips are Blue-Red-Green
+        brg[0] = rgb[2];
+        brg[1] = rgb[0];
+        brg[2] = rgb[1];
+
+        for(int j = 0; j < 3; j++){
+          Udp.write(brg[j] >> 4);
+          Udp.write(brg[j] << 4);
+        }
+      }
+      break;    
+    }
+  } // switch
   Udp.endPacket();
 }
 
