@@ -55,8 +55,9 @@ unsigned int localport = 5555;
 
 // Blink both lights during configuration
 void config_blink() {
-  digitalWrite(ACTIVE_LED, !digitalRead(ACTIVE_LED));
-  digitalWrite(DMX_LED, !digitalRead(DMX_LED));
+  int light = digitalRead(ACTIVE_LED);
+  digitalWrite(ACTIVE_LED, !light);
+  digitalWrite(DMX_LED, !light);
 }
 
 // Blink lights during connecting
@@ -99,6 +100,9 @@ void setup() {
   
   // Reset settings - for testing
   // wifiManager.resetSettings();
+
+  // Disable Serial debug
+  wifiManager.setDebugOutput(false);
 
   // Set callback when entering configuration mode (for blinking)
   wifiManager.setAPCallback(configModeCallback);

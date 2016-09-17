@@ -75,8 +75,8 @@ void setup()
   
   // Assemble hostname
   String config_name = "Netlight-Ctrl-" + String(ESP.getChipId(), HEX);
-  char hostname[15];  
-  config_name.toCharArray(hostname, 15);
+  char hostname[20];  
+  config_name.toCharArray(hostname, 20);
 
   // Start mDNS and DNS-SD
   if (!MDNS.begin(hostname)) {
@@ -87,13 +87,11 @@ void setup()
   // Announce controller udp service on localPort
   MDNS.addService("netlight-ctrl", "udp", localPort);
 
-
-  // set up I2C
+  // Set up I2C
   Wire.begin(12, 14);
 
   // Scan I2C-Bus
   pca_count = scan_i2c();
-  //pca_count = 2;
 
   // Initialize PWM value buffer
   
@@ -102,7 +100,6 @@ void setup()
   // set up pca pwm boards
   for(int i = 0; i < pca_count; i++){
     Serial << "Board #" << i+1 << "set up.\n";
-    //pca[i] = PCA9685(pca_address[i], PCA9685_MODE_N_DRIVER, 800);
     pca[i].setup();
   }
 
