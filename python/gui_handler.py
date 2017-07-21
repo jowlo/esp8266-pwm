@@ -1,7 +1,7 @@
 import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, GObject, GdkPixbuf, Gdk
-from ledctrl import LED_Controller
+from ledctrl import LedController
 from processors import Processor, ToStateProcessor, Relaxation
 from fft import FFT
 from strobe import Strobe
@@ -79,6 +79,7 @@ class StripDisplay():
 
 class Grouper:
     def __init__(self, strips, handler):
+        print("Strips: ", strips)
         self.handler = handler
         grouping_area = handler.builder.get_object("grouping_area")
         self.box = Gtk.Grid()
@@ -91,18 +92,24 @@ class Grouper:
         for i in range(strips):
             group_store.append([i, "Group " + str(i + 1)])
 
-
+        groups = self.handler.controller.groups
         for i in range(strips):
+        # for i in range(len(groups)):
             label = Gtk.Label()
-            label.set_text("Strip " + str(i))
+            label.set_text("Strip " + str(i + 1))
             label.set_justify(Gtk.Justification.LEFT)
             self.box.attach(label, 0, i, 1, 1)
             group_combo = Gtk.ComboBox.new_with_model_and_entry(group_store)
             self.combos.append(group_combo)
             group_combo.connect("changed", self.update_groups)
             group_combo.set_entry_text_column(1)
-            group_combo.set_active(i)
+            # group_combo.set_active(i)
+            group_combo.set_active(groups[i][0])
             self.box.attach(group_combo, 1, i, 1, 1)
+
+        self.update_groups(None)
+
+        print(groups)
 
         circle_button = Gtk.Button("Circle 1 (Outer first, then inner)")
         circle_button.connect("clicked", self.circle_group_set)
@@ -112,9 +119,13 @@ class Grouper:
         circle2_button.connect("clicked", self.circle2_group_set)
         self.box.attach(circle2_button, 1, strips + 3, 1, 1)
 
+        circle2_button = Gtk.Button("DJ to back")
+        circle2_button.connect("clicked", self.front2back_group_set)
+        self.box.attach(circle2_button, 1, strips + 4, 1, 1)
+
         default_button = Gtk.Button("Default")
         default_button.connect("clicked", self.strips_to_groups_set)
-        self.box.attach(default_button, 1, strips + 4, 1, 1)
+        self.box.attach(default_button, 1, strips + 5, 1, 1)
 
     def update_groups(self, combo):
         self.groups = [list() for _ in range(self.handler.controller.strips)]
@@ -130,11 +141,16 @@ class Grouper:
     def circle2_group_set(self, button):
         self.set_group([[0], [7], [1], [4], [2], [5], [3], [6]])
 
+    def front2back_group_set(self, button):
+        self.set_group([[2, 3], [4, 6], [0, 1]])
+
     def strips_to_groups_set(self, button):
         self.set_group([[i] for i in range(self.handler.controller.strips)])
+        #self.set_group([[0], [2], [3], [4], [5], [7], [8], [6], [9]])
 
     def set_group(self, groups):
         self.handler.controller.groups = [group for group in groups if group != []]
+        print(groups)
         for i, group in enumerate(groups):
             for strip in group:
                 self.combos[strip].set_active(i)
@@ -146,7 +162,7 @@ class Handler:
         self.builder = builder
         self.cardstring = "front:CARD=CODEC,DEV=0"
 
-        self.controller = LED_Controller(10, "192.168.4.1", 5555)
+        self.controller = LedController(10, "192.168.4.1", 5555)
 
         self.fft_bars = [builder.get_object("fft_bar_" + str(i)) for i in range(40)]
 

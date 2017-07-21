@@ -25,8 +25,8 @@ class Net:
 
         # self.color_correction = [1, 0.70, 0.25]
         # self.color_correction = [.6, .6, .6]
-        self.color_correction = [1, 1, 1]
-
+        self.color_correction = [.9, .9, .7]
+        # self.color_correction = [1, 1, 1]
 
     def gamma_correction(self, i):
         """Return Gamma-corrected PWM-value."""

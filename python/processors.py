@@ -22,6 +22,7 @@ class MoveColor(ToStateProcessor):
     def __init__(self, controller, source, base):
         super(MoveColor, self).__init__(controller, source)
         self.base = base
+        print(self.base)
         self.decay = 0.8
         self.threshold = 0
         self.channel = 0
